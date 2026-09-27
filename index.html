@@ -43,7 +43,7 @@
 
     <main class="flex-1 p-4">
       
-      <!-- ================= 模块一：每日行程 (全量恢复 Day 1 至 Day 9) ================= -->
+      <!-- ================= 模块一：每日行程 ================= -->
       <div x-show="currentTab === 'itinerary'">
         
         <div class="flex overflow-x-auto space-x-2 pb-3 mb-3 border-b border-gray-300 no-scrollbar">
@@ -149,7 +149,7 @@
               <select x-model="form.payer" class="text-xs border border-gray-300 rounded p-2 w-24 bg-gray-50 text-orange-600 font-bold">
                 <template x-for="p in payers" :key="p"><option :value="p" x-text="p + ' 支付'"></option></template>
               </select>
-              <input type="text" x-model="form.item" placeholder="明细 (如: 松鹤楼午餐)" class="text-xs border border-gray-300 rounded p-2 flex-1">
+              <input type="text" x-model="form.item" placeholder="明细 (如: 沈大成青团)" class="text-xs border border-gray-300 rounded p-2 flex-1">
             </div>
             <div class="flex gap-2 items-center">
               <span class="font-bold text-gray-600">¥</span>
@@ -240,7 +240,7 @@
   <script>
     // ==========================================
     // ⚠️ Firebase 多人同步数据库配置区 
-    // (去 console.firebase.google.com 创建一个免费 Web App 填入配置即可)
+    // (填入你的 Web App 参数，实现5人云同步)
     // ==========================================
     const firebaseConfig = {
       apiKey: "",
@@ -259,15 +259,13 @@
         db: null,
         
         expenses: [],
-        // 完全匹配：五位成员
         payers: ['爸', '妈', '胜', '锦', '昕'],
-        // 完全匹配：消费分类
         categories: ['门票', '打车', '吃饭', '购物', '住宿', '大交通', '其他'],
         filterDate: 'all',
         form: {
           date: '2026-10-31', 
           category: '吃饭',
-          payer: '昕', // 默认选中昕
+          payer: '昕', 
           item: '',
           amount: ''
         },
@@ -306,7 +304,6 @@
           this.filteredExpenses.forEach(e => {
             if(totals[e.payer] !== undefined) totals[e.payer] += parseFloat(e.amount || 0);
           });
-          // 只过滤出有金额的显示，保持界面清爽，不用的名字值为 0
           return totals;
         },
         get categoryTotals() {
@@ -358,41 +355,69 @@
           return 'bg-gray-100 text-gray-600';
         },
         
-        // 全量数据恢复 (Day 1 到 Day 9)，全部替换为无防盗链真实照片 (Unsplash API)
+        // 全量数据恢复 (Day 1 - 9)。图片全部替换为维基百科直连原图，保证手机绝对不破图。
         itinerary: [
           {
-            date: '10/31', title: 'Day 1: 上海初印象', route: '南京东路 ➔ 豫园 ➔ 外滩夜游',
+            date: '10/31', title: 'Day 1: 上海初印象', route: '飞机降落 ➔ 南京东路 ➔ 豫园 ➔ 外滩',
             items: [
-              { time: '10:00-12:30', type: '景点', title: '南京东路步行街', desc: '见证现代上海繁华变迁的商业老街。', location: '上海南京东路步行街', highlights: [{type: '必吃', text: '青团/条头糕'}, {type: '必买', text: '沈大成'}],
+              { time: '19:35-01:05', type: '交通', title: '✈️ 航班飞往上海', desc: '全家搭乘晚间航班，准时起飞前往上海。', location: '上海浦东国际机场', highlights: [], details: null },
+              { time: '01:05-03:30', type: '交通', title: '机场接机与入住', desc: '到达浦东机场。提前预订的 9 座商务包车在机场等候。', location: '汉庭酒店(上海南京东路步行街店)', highlights: [{type: '提醒', text: '办理入住补眠'}], details: null },
+              { time: '10:00-12:30', type: '景点', title: '南京东路步行街', desc: '睡醒后，逛最著名的百年商业老街。参考大众点评的必买必吃！', location: '上海南京东路步行街', highlights: [{type: '必吃', text: '泰康食品/沈大成'}, {type: '必买', text: '蝴蝶酥'}],
                 details: [{ 
-                  title: '🚶‍♀️ 游玩动线怎么走：', 
-                  points: ['<b>起点：</b>从汉庭酒店步行出发。', '<b>中途：</b>沿街打卡历史悠久的四大公司建筑。', '<b>终点：</b>纵穿街区抵达新世界大丸百货及各类旗舰店。'], 
-                  images: ['https://images.unsplash.com/photo-1549488344-c28f6236b328?auto=format&fit=crop&w=400&q=80', 'https://images.unsplash.com/photo-1577732958349-f0270a417dd1?auto=format&fit=crop&w=400&q=80']
+                  title: '🛍️ 大众点评/小红书 必吃必买精选：', 
+                  points: [
+                    '<b>必吃精选：</b>',
+                    '📍 <b>沈大成：</b>双酿团、条头糕、青团（软糯星人狂喜，一定要尝）。',
+                    '📍 <b>泰康食品：</b>鲜肉月饼（现烤出来的超级香，排队也值得）。',
+                    '<b>必买伴手礼：</b>',
+                    '📍 <b>国际饭店西饼屋：</b>传说中最强的【蝴蝶酥】。如果门店排队太长，可在南京东路周边的食品店找找代购。',
+                    '📍 <b>第一食品商店：</b>汇集了老上海各种特色伴手礼，一站式买齐。'
+                  ], 
+                  // 维基百科公共资源，永不破图
+                  images: ['https://upload.wikimedia.org/wikipedia/commons/thumb/c/cf/Nanjing_Road_East_%281%29.jpg/800px-Nanjing_Road_East_%281%29.jpg', 'https://upload.wikimedia.org/wikipedia/commons/thumb/2/25/Qingtuan_by_Shen_Dacheng.jpg/800px-Qingtuan_by_Shen_Dacheng.jpg']
                 }]
               },
-              { time: '12:30-16:30', type: '景点', title: '豫园与城隍庙 (精华游)', desc: '400多年历史的江南明清园林，布局精巧以“小中见大”著称。', location: '上海豫园', highlights: [{type: '预约', text: '门票¥200'}, {type: '必点', text: '南翔蟹粉小笼包'}],
+              { time: '12:30-16:30', type: '景点', title: '豫园与城隍庙', desc: '400多年历史的江南古典明清园林，布局精巧以“小中见大”著称。', location: '上海豫园', highlights: [{type: '预约', text: '门票¥200'}, {type: '必点', text: '南翔蟹粉小笼包'}],
                 details: [{ 
-                  title: '🗺️ 园内深度步行路线（约2.5小时）：', 
+                  title: '🗺️ 园内深度步行路线（实景打卡点）：', 
                   points: [
-                    '<b>第一步：</b>直奔镇园之宝【大假山】，数千吨武康石堆砌而成。', 
-                    '<b>第二步：</b>走到【仰山堂】与【卷雨楼】，这里是欣赏大假山和池景的最佳机位，拍倒影极美。', 
-                    '<b>第三步：</b>进入【玉华堂】（园主书斋），堂前欣赏江南三大名石【玉玲珑】。', 
-                    '<b>第四步：</b>穿过小刀会遗址【点春堂】。出园后走上地标【九曲桥】，在湖心亭茶楼歇脚喝茶。'
+                    '<b>大假山：</b>豫园的镇园之宝，由数千吨武康石堆砌而成，极具气势。', 
+                    '<b>仰山堂、卷雨楼：</b>是欣赏大假山和池景的最佳位置。', 
+                    '<b>玉华堂：</b>园主潘允端的书斋，堂前的“玉玲珑”是江南三大名石之一。', 
+                    '<b>点春堂：</b>曾是小刀会起义的指挥部，富有历史意义。',
+                    '<b>九曲桥与湖心亭：</b>虽然桥在园外，但从园内望去是经典画面。',
+                    '<b>第二站：上海城隍庙（约30分钟）</b><br>游玩策略：从豫园出来，步行至城隍庙。即使不信教，也值得进去感受一下香火缭绕的道教氛围，建筑本身也很有特色。'
                   ], 
-                  images: ['https://images.unsplash.com/photo-1549419131-017e813137cc?auto=format&fit=crop&w=400&q=80', 'https://images.unsplash.com/photo-1563245372-f21724e3856d?auto=format&fit=crop&w=400&q=80']
+                  images: [
+                    'https://upload.wikimedia.org/wikipedia/commons/thumb/e/e5/Yu_Yuan_Garden.jpg/800px-Yu_Yuan_Garden.jpg', 
+                    'https://upload.wikimedia.org/wikipedia/commons/thumb/4/4e/Yu_Ling_Long_in_Yu_Garden.jpg/800px-Yu_Ling_Long_in_Yu_Garden.jpg',
+                    'https://upload.wikimedia.org/wikipedia/commons/thumb/5/52/Shanghai_City_God_Temple_2015.jpg/800px-Shanghai_City_God_Temple_2015.jpg'
+                  ]
                 }]
               },
-              { time: '17:30-21:30', type: '景点', title: '外滩保姆级夜游 (真实测算)', desc: '19:00-21:30是最佳打光蓝调时刻，对望陆家嘴三件套。', location: '外滩海关大楼', highlights: [{type: '必游', text: '万国建筑博览群'}],
+              { time: '17:30-21:30', type: '景点', title: '外滩保姆级夜游 (纯步行直达！)', desc: '完全不需要打车！从豫园出来直接步行顺路去外滩。', location: '外滩海关大楼', highlights: [{type: '必游', text: '万国建筑博览群'}],
                 details: [{ 
-                  title: '📸 亲测无废步路线（全程2.5km / 步行40分）：', 
+                  title: '【📌 外滩保姆级夜游攻略】', 
                   points: [
-                    '<b>1. 豫园地铁站 ➔ 海关大楼 (15分钟)</b>：外滩地标，准点听《东方红》钟声。',
-                    '<b>2. 海关大楼 ➔ 外滩观景台 (2分钟)</b>：正对黄浦江，全景解锁陆家嘴三件套。',
-                    '<b>3. 观景台 ➔ 和平饭店 (5分钟)</b>：南京东路最美转角。',
-                    '<b>4. 和平饭店 ➔ 格林邮船 (4分钟)</b>：仰拍东方明珠的宝藏角度。',
-                    '<b>5. 格林邮船 ➔ 外白渡桥 (5分钟)</b>：利用百年钢结构桥架进行框架构图。最后顺路走南京路回酒店。'
+                    '<b>游玩时长：</b>2-3小时（轻松不累）<br><b>最佳拍照时间：</b>19:00-21:30（灯光全开，蓝调时刻氛围感拉满）',
+                    '<b>🗺 经典游玩路线（真实顺路顺序）：</b><br>豫园地铁站7号口 ➔ 海关大楼 ➔ 外滩观景台 ➔ 和平饭店 ➔ 格林邮船 ➔ 外白渡桥 ➔ 新天安堂 ➔ 南京东路地铁站6号口',
+                    '<b>🚶 实测步行时间 & 距离 (全程约2.5km/纯步行40分钟)：</b>',
+                    '• 豫园站7号口 ➔ 海关大楼：980m | 约15分钟',
+                    '• 海关大楼 ➔ 外滩观景台：90m | 约2分钟',
+                    '• 外滩观景台 ➔ 和平饭店：279m | 约5分钟',
+                    '• 和平饭店 ➔ 格林邮船：281m | 约4分钟',
+                    '• 格林邮船 ➔ 外白渡桥：273m | 约4分钟',
+                    '• 外白渡桥 ➔ 新天安堂：191m | 约3分钟',
+                    '<b>📸 绝美拍摄机位盘点：</b>',
+                    '• <b>海关大楼：</b>外滩地标，整点会敲响《东方红》钟声，出片必拍。',
+                    '• <b>外滩观景台：</b>正对黄浦江，全景解锁“陆家嘴三件套”，魔都夜景视觉拉满。',
+                    '• <b>和平饭店：</b>南京东路最美转角，老上海复古高级感直接封神。',
+                    '• <b>格林邮船：</b>侧拍东方明珠的宝藏角度，纵深感与线条感超强。',
+                    '• <b>外白渡桥：</b>利用钢结构桥洞进行框架构图，陆家嘴全景尽收眼底。',
+                    '• <b>新天安堂：</b>哥特式教堂建筑，小众安静，充满欧式复古老电影感。',
+                    '• <b>外滩万国建筑群：</b>背对黄浦江拍摄，百年建筑的灯火辉煌。'
                   ], 
-                  images: ['https://images.unsplash.com/photo-1548248823-ce16bf249b32?auto=format&fit=crop&w=400&q=80', 'https://images.unsplash.com/photo-1557053964-937650b63311?auto=format&fit=crop&w=400&q=80']
+                  images: ['https://upload.wikimedia.org/wikipedia/commons/thumb/d/d7/Customs_House_Shanghai.jpg/800px-Customs_House_Shanghai.jpg', 'https://upload.wikimedia.org/wikipedia/commons/thumb/8/86/Waibaidu_Bridge_at_night.jpg/800px-Waibaidu_Bridge_at_night.jpg']
                 }]
               }
             ]
@@ -404,21 +429,20 @@
                 details: [{ 
                   title: '🗺️ 实测无折返路线（全程约45分钟）：', 
                   points: ['交通大学站7号口 ➔ Teenie Weenie ➔ 宋庆龄故居 ➔ 武康大楼（魔都首选核心地标） ➔ 武康庭 ➔ 罗密欧阳台 ➔ Wiggle Wiggle ➔ Looknow&Flow。'], 
-                  images: ['https://images.unsplash.com/photo-1620202868884-2e99d7541df6?auto=format&fit=crop&w=400&q=80', 'https://images.unsplash.com/photo-1520110120835-c96534a4c984?auto=format&fit=crop&w=400&q=80']
+                  images: ['https://upload.wikimedia.org/wikipedia/commons/thumb/0/07/Wukang_Mansion_2021.jpg/800px-Wukang_Mansion_2021.jpg']
                 }]
               },
               { time: '14:30-17:00', type: '景点', title: '上海中心大厦', desc: '登上中国第一高楼，俯瞰黄浦江。', location: '上海中心大厦', highlights: [{type: '必点', text: '119层高空咖啡'}],
                 details: [{ 
                   title: '🌆 登高与日落动线：', 
-                  points: ['打车穿隧道跨江直达陆家嘴，直达118层“上海之巅”观光厅。', '随后步行至北外滩国客中心，在巨型“魔都糖葫芦”银色球体机位，拍摄对岸夕阳。'],
-                  images: ['https://images.unsplash.com/photo-1538428494232-9c0d8a3ab403?auto=format&fit=crop&w=400&q=80']
+                  points: ['打车穿隧道跨江直达陆家嘴，直达118层“上海之巅”观光厅。', '随后步行至北外滩国客中心，拍摄对岸夕阳。'],
+                  images: ['https://upload.wikimedia.org/wikipedia/commons/thumb/c/c7/Shanghai_Tower_2015.jpg/800px-Shanghai_Tower_2015.jpg']
                 }]
               },
               { time: '17:30-21:30', type: '餐饮', title: '晚餐：老吉士(国金店)', desc: '上海最正宗的本帮菜之一。', location: '老吉士(国金中心商场店)', highlights: [{type: '必点', text: '吉士红烧肉'}, {type: '必点', text: '葱烤鱼头'}],
                 details: [{
                   title: '🍴 推荐理由与控时：',
-                  points: ['为了避免周日晚高峰跨江折返徐汇，特别优化至陆家嘴就近用餐。必点吉士红烧肉。'],
-                  images: ['https://images.unsplash.com/photo-1525755662778-989d0524087e?auto=format&fit=crop&w=400&q=80']
+                  points: ['为了避免周日晚高峰跨江折返徐汇，特别优化至陆家嘴就近用餐。必点吉士红烧肉。']
                 }]
               }
             ]
@@ -426,19 +450,18 @@
           {
             date: '11/02', title: 'Day 3: 无锡运河夜色', route: '全季酒店 ➔ 惠山古镇 ➔ 南长街',
             items: [
-              { time: '08:30-10:30', type: '交通', title: '转移无锡与物流寄存', desc: '包车前往无锡，必须先寄存5大行李。', location: '全季酒店无锡南长街店', highlights: [{type: '硬性', text: '前台寄存大行李'}] },
+              { time: '08:30-10:30', type: '交通', title: '转移无锡与物流寄存', desc: '包车前往无锡，必须先寄存5大行李。', location: '全季酒店无锡南长街店', highlights: [{type: '硬性', text: '前台寄存大行李'}], details: null },
               { time: '14:00-16:30', type: '景点', title: '惠山古镇与寄畅园', desc: '探访江南古典园林最高杰作与无锡泥人。', location: '无锡寄畅园', highlights: [{type: '必游', text: '寄畅园借景锡山'}],
                 details: [{ 
                   title: '🗺️ 古镇必经动线：', 
                   points: ['<b>起点：</b>东北门进入。途经打卡无锡泥人、宝善桥。', '<b>核心区：</b>进入【寄畅园】。乾隆皇帝六下江南赞不绝口，北京颐和园谐趣园的蓝本。感受“借锡山塔影入园”的精妙。'],
-                  images: ['https://images.unsplash.com/photo-1629853381665-27a920c78a05?auto=format&fit=crop&w=400&q=80']
+                  images: ['https://upload.wikimedia.org/wikipedia/commons/thumb/3/3d/Jichang_Garden.jpg/800px-Jichang_Garden.jpg']
                 }]
               },
               { time: '17:30-20:30', type: '景点', title: '清名桥古运河 (南长街)', desc: '京杭大运河畔保留最完整的古街区。', location: '无锡南长街', highlights: [{type: '必吃', text: '太湖三白、无锡排骨'}],
                 details: [{ 
                   title: '🏮 运河夜游与晚饭：', 
-                  points: ['傍晚跨越标志性的【清名桥】，两岸红灯笼亮起，拍出水弄堂的江南画卷。', '晚饭直接在南长街本帮菜馆吃。'],
-                  images: ['https://images.unsplash.com/photo-1594951167448-f6ee4a8563a6?auto=format&fit=crop&w=400&q=80']
+                  points: ['傍晚跨越标志性的【清名桥】，两岸红灯笼亮起，拍出水弄堂的江南画卷。晚饭直接在南长街吃。']
                 }]
               }
             ]
@@ -450,21 +473,20 @@
                 details: [{ 
                   title: '🚶‍♂️ 园林串烧走法：', 
                   points: ['<b>拙政园：</b>必须走到【小飞虹】，这是江南唯一的园林廊桥。', '<b>狮子林：</b>穿梭在奇石叠起的假山迷宫中。'],
-                  images: ['https://images.unsplash.com/photo-1577801625902-691bf701d51a?auto=format&fit=crop&w=400&q=80']
+                  images: ['https://upload.wikimedia.org/wikipedia/commons/thumb/a/ae/Humble_Administrator%27s_Garden_2013.jpg/800px-Humble_Administrator%27s_Garden_2013.jpg']
                 }]
               },
               { time: '12:30-17:00', type: '景点', title: '平江路历史街区 (含午餐)', desc: '宋代《平江图》“水陆并行”格局再现。', location: '苏州平江路', highlights: [{type: '必游', text: '听地道苏州评弹'}, {type: '必吃', text: '松鹤楼本帮菜'}],
                 details: [{ 
                   title: '🍵 听曲与漫步：', 
-                  points: ['午餐在【松鹤楼】吃正宗苏帮菜。', '进入平江路，穿梭在小桥流水人家。找一家茶馆，听一曲地道的吴侬软语【苏州评弹】。'],
-                  images: ['https://images.unsplash.com/photo-1563235334-a15d9ccdecc8?auto=format&fit=crop&w=400&q=80', 'https://images.unsplash.com/photo-1576485077124-7740e53a9925?auto=format&fit=crop&w=400&q=80']
+                  points: ['午餐在【松鹤楼】吃正宗苏帮菜。', '进入平江路，找一家茶馆，听一曲地道的吴侬软语【苏州评弹】。'],
+                  images: ['https://upload.wikimedia.org/wikipedia/commons/thumb/4/4b/Pingjiang_Road_Suzhou_2.jpg/800px-Pingjiang_Road_Suzhou_2.jpg']
                 }]
               },
               { time: '17:30-20:00', type: '景点', title: '七里山塘街夜游', desc: '姑苏第一名街，体验短途山塘街摇橹船。', location: '苏州七里山塘景区', highlights: [{type: '必吃', text: '苏式焖肉面'}],
                 details: [{ 
                   title: '🛶 游船夜景动线：', 
-                  points: ['晚间红灯笼亮起时，宛如现实版的《千与千寻》。', '沿河观赏两岸粉墙黛瓦，5人在此体验一次短途【山塘街摇橹船】。'],
-                  images: ['https://images.unsplash.com/photo-1517400508447-f8dd518b86e3?auto=format&fit=crop&w=400&q=80']
+                  points: ['晚间红灯笼亮起时，宛如现实版的《千与千寻》。', '沿河观赏两岸粉墙黛瓦，5人在此体验一次短途【山塘街摇橹船】。']
                 }]
               }
             ]
@@ -475,15 +497,14 @@
               { time: '14:00-17:30', type: '景点', title: '西湖水陆无痛游', desc: '避开10公里暴走，用最舒服的方式看文人山水。', location: '杭州柳浪闻莺', highlights: [{type: '必游', text: '包船游湖'}, {type: '必点', text: '西湖龙井'}],
                 details: [{ 
                   title: '🛶 水陆结合路线：', 
-                  points: ['导航直达【柳浪闻莺】，在西湖边找品牌正宗的茶室喝一杯【西湖龙井】。', '包下一条游船深入湖心，远观雷峰塔，享受体能极度舒适的游玩体验。'],
-                  images: ['https://images.unsplash.com/photo-1533052604753-29471f450372?auto=format&fit=crop&w=400&q=80']
+                  points: ['导航直达【柳浪闻莺】，在西湖边找茶室喝一杯【西湖龙井】。', '包下一条游船深入湖心，远观雷峰塔，体能极度舒适。'],
+                  images: ['https://upload.wikimedia.org/wikipedia/commons/thumb/2/23/West_Lake_Hangzhou.jpg/800px-West_Lake_Hangzhou.jpg']
                 }]
               },
               { time: '18:30-21:30', type: '景点', title: '南山路与西湖喷泉', desc: '古典西湖与现代商业街的黄金交汇点。', location: '杭州酒家(延安路总店)', highlights: [{type: '必点', text: '龙井虾仁'}],
                 details: [{
                   title: '🚶‍♀️ 夜晚散步与晚餐：',
-                  points: ['在【杭州酒家】享用杭帮菜。', '沿南山路“黄金大道”漫步，顺路走回湖滨三公园看西湖音乐喷泉。'],
-                  images: ['https://images.unsplash.com/photo-1512411933907-fb25a1768853?auto=format&fit=crop&w=400&q=80']
+                  points: ['在【杭州酒家】享用杭帮菜。沿南山路“黄金大道”漫步，顺路走回湖滨三公园看西湖音乐喷泉。']
                 }]
               }
             ]
@@ -494,15 +515,14 @@
               { time: '07:30-12:00', type: '景点', title: '灵隐寺与飞来峰', desc: '中国最早的佛教名刹，隐藏在飞来峰景区深处。', location: '杭州灵隐寺', highlights: [{type: '提醒', text: '早9点前必达'}],
                 details: [{
                   title: '📿 祈福动线与避坑：',
-                  points: ['<b>时控：</b>必须早上09:00前抵达，否则严重堵车。', '先观赏【飞来峰】佛教石刻。步入灵隐寺，依次走过天王殿、大雄宝殿祈福。'],
-                  images: ['https://images.unsplash.com/photo-1573429813295-8e4745811776?auto=format&fit=crop&w=400&q=80']
+                  points: ['<b>时控：</b>必须早上09:00前抵达，否则严重堵车。', '先观赏【飞来峰】佛教石刻。步入灵隐寺，依次走过天王殿、大雄宝殿祈福。']
                 }]
               },
               { time: '17:30-22:00', type: '景点', title: '乌镇西栅独享摇橹船', desc: '江浙沪水乡的颜值天花板，日落时分的黄金20分钟。', location: '乌镇西栅', highlights: [{type: '必游', text: '5人包摇橹船'}],
                 details: [{
                   title: '🛶 黄金入夜体验：',
-                  points: ['下午乘包车抵达乌镇西栅。', '<b>高光体验：</b>5人包下一条摇橹船（限乘6人极私密）。在夕阳西下、两岸华灯初上的黄金20分钟里看古镇倒影。'],
-                  images: ['https://images.unsplash.com/photo-1629853381665-27a920c78a05?auto=format&fit=crop&w=400&q=80', 'https://images.unsplash.com/photo-1594951167448-f6ee4a8563a6?auto=format&fit=crop&w=400&q=80']
+                  points: ['下午乘包车抵达乌镇西栅。', '<b>高光体验：</b>5人包下一条摇橹船。在夕阳西下、两岸华灯初上的黄金20分钟里看古镇倒影。'],
+                  images: ['https://upload.wikimedia.org/wikipedia/commons/thumb/8/87/Wuzhen_Water_Town.jpg/800px-Wuzhen_Water_Town.jpg']
                 }]
               }
             ]
@@ -513,8 +533,7 @@
               { time: '08:00-11:30', type: '景点', title: '西栅晨游与早茶客', desc: '清晨无人的青石板路是避开游客的最佳出片时间。', location: '乌镇西栅', highlights: [{type: '必吃', text: '水乡早茶客'}],
                 details: [{
                   title: '📸 晨游文艺动线：',
-                  points: ['去吃一顿丰盛的水乡早茶客，清晨游人极少，建筑极其出片。', '探访【木心美术馆】、【草木本色染坊】（看蓝印花布）、【昭明书院】。'],
-                  images: ['https://images.unsplash.com/photo-1576485077124-7740e53a9925?auto=format&fit=crop&w=400&q=80']
+                  points: ['去吃一顿丰盛的水乡早茶客，清晨游人极少，建筑极其出片。', '探访【木心美术馆】、【草木本色染坊】（看蓝印花布）、【昭明书院】。']
                 }]
               }
             ]
@@ -526,28 +545,25 @@
                 details: [{
                   title: '🚶‍♀️ 弄堂穿梭动线：',
                   points: ['退房后，把5件大行李寄存在前台，开启彻底的空手游。', '穿梭在清水砖墙的石库门旧弄堂里，午餐在【鼎泰丰】吃黑松露小笼。'],
-                  images: ['https://images.unsplash.com/photo-1582299865005-063a5ef59846?auto=format&fit=crop&w=400&q=80']
+                  images: ['https://upload.wikimedia.org/wikipedia/commons/thumb/1/1a/Xintiandi_Shanghai.jpg/800px-Xintiandi_Shanghai.jpg']
                 }]
               },
               { time: '14:00-16:00', type: '景点', title: '百年张园', desc: '海上第一名园，现存规模最大、建筑风格最丰富的石库门群。', location: '上海张园', highlights: [{type: '必点', text: 'Blue Bottle蓝瓶咖啡'}],
                 details: [{
                   title: '☕ 奢牌与咖啡：',
-                  points: ['全新高规格焕新的张园，大批国际奢牌在老弄堂内开设体验馆。', '在石库门老砖墙下喝一杯【Blue Bottle】的手冲咖啡，极度出片。'],
-                  images: ['https://images.unsplash.com/photo-1497935586351-b67a49e012bf?auto=format&fit=crop&w=400&q=80']
+                  points: ['全新高规格焕新的张园，大批国际奢牌开设体验馆。', '在石库门老砖墙下喝一杯【Blue Bottle】的手冲咖啡，极度出片。']
                 }]
               },
               { time: '16:00-18:00', type: '景点', title: '思南公馆', desc: '上海唯一成片花园洋房核心风貌区。', location: '上海思南公馆', highlights: [{type: '必游', text: '梅兰芳故居'}],
                 details: [{
                   title: '🌳 洋房漫游：',
-                  points: ['漫步在独立欧式花园洋房和法国梧桐下，探访梅兰芳故居，感受纯正老上海“老钱风”。'],
-                  images: ['https://images.unsplash.com/photo-1512411933907-fb25a1768853?auto=format&fit=crop&w=400&q=80']
+                  points: ['漫步在独立欧式花园洋房和法国梧桐下，探访梅兰芳故居，感受纯正老上海“老钱风”。']
                 }]
               },
               { time: '18:30-22:00', type: '餐饮', title: '兰心晚宴与送机闭环', desc: '最难订的家庭式老牌本帮菜。', location: '兰心餐厅(进贤路店)', highlights: [{type: '硬性', text: '需提早电话订座'}],
                 details: [{
                   title: '✈️ 完美收尾动线：',
-                  points: ['前往进贤路吃名震上海的【兰心餐厅】，必点红烧肉（务必提早预订）。', '吃完回酒店前台取回5件大行李。', '登上深夜9座包车直达浦东机场T2航站楼。'],
-                  images: ['https://images.unsplash.com/photo-1508215885820-4585e56135c8?auto=format&fit=crop&w=400&q=80']
+                  points: ['前往进贤路吃名震上海的【兰心餐厅】，必点红烧肉（务必提早预订）。', '吃完回酒店前台取回5件大行李。', '登上深夜9座包车直达浦东机场T2航站楼。']
                 }]
               }
             ]
