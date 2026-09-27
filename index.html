@@ -3,42 +3,44 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-  <title>华东九日行｜保姆级随行卡</title>
+  <title>华东九日行｜随行卡与云记账</title>
 
   <!-- Tailwind CSS & Alpine.js -->
   <script src="https://cdn.tailwindcss.com"></script>
   <script defer src="https://cdn.jsdelivr.net/npm/@alpinejs/collapse@3.x.x/dist/cdn.min.js"></script>
   <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js"></script>
+  
+  <!-- Firebase SDK (支持多人云端同步) -->
+  <script src="https://www.gstatic.com/firebasejs/10.4.0/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.4.0/firebase-firestore-compat.js"></script>
 
   <style>
     body { background-color: #f6f5f0; color: #2c2c2c; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; }
     .chinese-border { border: 1px solid #e2ded4; }
-    .tag-must-visit { background-color: #e6f4ea; color: #137333; }
-    .tag-must-eat { background-color: #fce8e6; color: #c5221f; }
-    .tag-reservation { background-color: #fef7e0; color: #b06000; }
-    .tag-buy { background-color: #f3e8fd; color: #7627bb; }
-    /* 隐藏滚动条但保留横向滚动功能 */
     .no-scrollbar::-webkit-scrollbar { display: none; }
     .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
   </style>
 </head>
-<body class="pb-20">
+<body class="pb-24">
 
   <div x-data="appData()" class="max-w-md mx-auto min-h-screen flex flex-col">
     
     <header class="bg-[#2d3a3a] text-[#e8e4d9] p-4 sticky top-0 z-50 shadow-md flex justify-between items-center">
       <div>
         <h1 class="text-lg font-bold tracking-widest">华东九日游</h1>
-        <p class="text-xs text-gray-300">上海·无锡·苏州·乌镇·杭州</p>
+        <p class="text-[11px] text-gray-300">上海·无锡·苏州·乌镇·杭州</p>
       </div>
-      <span class="text-[10px] border border-[#a39382] px-2 py-1 rounded text-[#e8e4d9]">5人商务包车</span>
+      <div class="text-right">
+        <span class="text-[10px] border border-[#a39382] px-2 py-0.5 rounded text-[#e8e4d9]">5人包车团</span>
+        <div x-show="syncMode" class="text-[9px] text-emerald-400 mt-1">🟢 多人云端同步中</div>
+        <div x-show="!syncMode" class="text-[9px] text-orange-300 mt-1">🟡 单机离线模式</div>
+      </div>
     </header>
 
     <main class="flex-1 p-4">
-      <!-- TAB: 每日行程 -->
+      
+      <!-- ================= 模块一：每日行程 ================= -->
       <div x-show="currentTab === 'itinerary'">
-        
-        <!-- 天数滑块 -->
         <div class="flex overflow-x-auto space-x-2 pb-3 mb-3 border-b border-gray-300 no-scrollbar">
           <template x-for="(day, index) in itinerary" :key="index">
             <button @click="selectedDay = index" 
@@ -50,464 +52,350 @@
           </template>
         </div>
 
-        <div class="bg-white rounded-xl p-3 mb-4 chinese-border shadow-sm">
-          <h2 class="font-bold text-base text-[#2d3a3a]" x-text="itinerary[selectedDay].title"></h2>
-          <p class="text-[11px] text-gray-500 mt-0.5" x-text="'动线：' + itinerary[selectedDay].route"></p>
-        </div>
-
-        <!-- 行程卡片 -->
         <div class="space-y-4">
           <template x-for="item in itinerary[selectedDay].items" :key="item.time">
-            
             <div x-data="{ expanded: false }" class="bg-white rounded-xl p-4 chinese-border shadow-sm">
               <div class="flex justify-between items-center mb-2">
                 <span class="text-xs font-mono bg-gray-100 text-gray-600 px-2 py-0.5 rounded" x-text="item.time"></span>
-                <span class="text-[11px] px-2 py-0.5 rounded font-medium" 
-                      :class="item.type === '景点' ? 'bg-emerald-50 text-emerald-700' : (item.type === '餐饮' ? 'bg-orange-50 text-orange-700' : 'bg-blue-50 text-blue-700')"
-                      x-text="item.type"></span>
+                <span class="text-[11px] px-2 py-0.5 rounded font-medium bg-gray-50 border border-gray-200" x-text="item.type"></span>
               </div>
-
               <h3 class="font-bold text-gray-800 text-base mb-1" x-text="item.title"></h3>
               <p class="text-xs text-gray-600 mb-3 leading-relaxed" x-text="item.desc"></p>
 
-              <!-- 亮点标签 -->
-              <div class="flex flex-wrap gap-1.5 mb-3">
-                <template x-for="highlight in item.highlights" :key="highlight.text">
-                  <span class="text-[10px] px-2 py-0.5 rounded-full font-medium"
-                        :class="getHighlightClass(highlight.type)"
-                        x-text="highlight.type + ': ' + highlight.text"></span>
-                </template>
-              </div>
-
-              <!-- 深度攻略下拉面板 (小红书风) -->
+              <!-- 深度攻略与真实照片 -->
               <template x-if="item.details">
                 <div class="mb-3">
                   <button @click="expanded = !expanded" class="w-full text-left flex justify-between items-center bg-gray-50 py-2.5 px-3 rounded-lg text-[11px] text-[#2d3a3a] font-bold active:bg-gray-100 border border-gray-100">
-                    <span x-text="expanded ? '收起保姆级攻略' : '📖 展开小红书同款保姆级攻略与图集'"></span>
+                    <span x-text="expanded ? '收起保姆级攻略' : '📖 展开实测动线与图集'"></span>
                     <span x-text="expanded ? '▲' : '▼'" class="text-[10px] text-gray-400"></span>
                   </button>
-                  
                   <div x-show="expanded" x-collapse class="mt-3">
                     <template x-for="detail in item.details" :key="detail.title">
-                      <div class="mb-5">
-                        
-                        <!-- 核心游玩路线/介绍 -->
+                      <div class="mb-4">
                         <h4 class="text-[11px] font-bold text-gray-800 mb-2 border-l-2 border-[#2d3a3a] pl-2" x-text="detail.title"></h4>
-                        <ul class="space-y-2 text-[11px] text-gray-600 mb-3 pl-1">
+                        <ul class="space-y-1.5 text-[11px] text-gray-600 mb-3 pl-1">
                           <template x-for="point in detail.points" :key="point">
-                            <li x-html="point" class="leading-relaxed bg-gray-50 p-2 rounded"></li>
+                            <li x-html="point" class="leading-relaxed bg-gray-50 p-1.5 rounded"></li>
                           </template>
                         </ul>
-
-                        <!-- 横向滑动照片墙 (3:4比例) -->
+                        <!-- 横向图集 -->
                         <template x-if="detail.images && detail.images.length > 0">
-                          <div class="flex overflow-x-auto snap-x snap-mandatory space-x-3 pb-2 no-scrollbar">
+                          <div class="flex overflow-x-auto snap-x space-x-2 pb-2 no-scrollbar">
                             <template x-for="img in detail.images" :key="img">
-                              <div class="snap-center shrink-0">
-                                <!-- 模仿小红书 3:4 (w-40 h-52) 的竖版构图 -->
-                                <img :src="img" class="w-40 h-52 object-cover rounded-lg shadow-sm border border-gray-200" loading="lazy">
-                              </div>
+                              <img :src="img" class="w-32 h-44 object-cover rounded-md shadow-sm snap-center shrink-0 border border-gray-200" loading="lazy">
                             </template>
                           </div>
                         </template>
-
                       </div>
                     </template>
                   </div>
                 </div>
               </template>
-
-              <!-- 百度地图唤醒按钮 -->
+              
+              <!-- 百度地图 App 唤起 -->
               <template x-if="item.location">
-                <div class="pt-3 border-t border-gray-100 flex justify-between items-center mt-2">
-                  <span class="text-[10px] text-gray-400 truncate max-w-[160px] font-mono" x-text="'📍 ' + item.location"></span>
-                  <!-- 点击直接调用 baidumap:// 原生协议 -->
-                  <button @click="openBaiduMap(item.location)"
-                     class="text-[11px] text-white bg-[#2942ff] px-3 py-1.5 rounded-full flex items-center gap-1 active:bg-blue-700 font-medium transition-colors shadow-sm">
-                    <svg class="w-3 h-3" fill="currentColor" viewBox="0 0 24 24"><path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7zm0 9.5c-1.38 0-2.5-1.12-2.5-2.5s1.12-2.5 2.5-2.5 2.5 1.12 2.5 2.5-1.12 2.5-2.5 2.5z"/></svg>
-                    唤起百度地图
+                <div class="pt-2 border-t border-gray-100 flex justify-between items-center mt-2">
+                  <span class="text-[10px] text-gray-400 truncate max-w-[160px]" x-text="'📍 ' + item.location"></span>
+                  <button @click="openBaiduMap(item.location)" class="text-[11px] text-blue-600 bg-blue-50 border border-blue-100 px-3 py-1.5 rounded-full font-medium">
+                    🧭 导航/打车
                   </button>
                 </div>
               </template>
             </div>
-            
           </template>
         </div>
       </div>
 
-      <!-- 工具页面 -->
-      <div x-show="currentTab === 'tools'" class="space-y-4">
+      <!-- ================= 模块二：多人云端记账 ================= -->
+      <div x-show="currentTab === 'accounting'" class="space-y-4">
+        
+        <!-- 记账输入表单 -->
         <div class="bg-white rounded-xl p-4 chinese-border shadow-sm">
-          <h2 class="font-bold text-gray-800 border-b pb-2 mb-2 flex items-center gap-2">✈️ 航班大交通</h2>
-          <div class="text-[11px] space-y-2 text-gray-600">
-            <p><b>去程：</b>10/31 01:05-03:30 降落浦东机场 (9座接机)</p>
-            <p><b>回程：</b>11/8 02:15 起飞 (浦东机场T2航站楼送机)</p>
+          <h2 class="font-bold text-gray-800 border-b pb-2 mb-3 flex items-center justify-between">
+            <span>✍️ 记一笔</span>
+          </h2>
+          <div class="space-y-3">
+            <div class="flex gap-2">
+              <input type="date" x-model="form.date" class="text-xs border border-gray-300 rounded p-2 flex-1 bg-gray-50">
+              <select x-model="form.category" class="text-xs border border-gray-300 rounded p-2 flex-1 bg-gray-50">
+                <template x-for="cat in categories" :key="cat"><option :value="cat" x-text="cat"></option></template>
+              </select>
+            </div>
+            <div class="flex gap-2">
+              <select x-model="form.payer" class="text-xs border border-gray-300 rounded p-2 w-24 bg-gray-50 text-[#2d3a3a] font-bold">
+                <template x-for="p in payers" :key="p"><option :value="p" x-text="p + ' 支付'"></option></template>
+              </select>
+              <input type="text" x-model="form.item" placeholder="花费明细 (如: 老吉士晚餐)" class="text-xs border border-gray-300 rounded p-2 flex-1">
+            </div>
+            <div class="flex gap-2 items-center">
+              <span class="font-bold text-gray-600">¥</span>
+              <input type="number" x-model="form.amount" placeholder="0.00" class="text-sm border border-gray-300 rounded p-2 flex-1 font-mono">
+              <button @click="addExpense()" class="bg-[#2d3a3a] text-white px-5 py-2 rounded text-xs font-bold active:bg-gray-800">提交</button>
+            </div>
           </div>
         </div>
-        
+
+        <!-- 财务汇总看板 -->
         <div class="bg-white rounded-xl p-4 chinese-border shadow-sm">
-          <h2 class="font-bold text-gray-800 border-b pb-2 mb-2 flex items-center justify-between">
-            <span>💰 离线随手记账</span>
-            <span class="text-xs text-emerald-700" x-text="'总计: ¥' + totalExpense"></span>
-          </h2>
-          <div class="flex gap-2 mb-3">
-            <input type="text" x-model="newExpense.item" placeholder="输入账目" class="text-xs border rounded p-2 flex-1">
-            <input type="number" x-model="newExpense.amount" placeholder="金额¥" class="text-xs border rounded p-2 w-20">
-            <button @click="addExpense()" class="bg-[#2d3a3a] text-white px-3 py-2 rounded text-xs">记录</button>
+          <div class="flex justify-between items-end border-b pb-3 mb-3">
+            <div>
+              <span class="text-[10px] text-gray-500 block mb-1">旅行总计花费 (¥)</span>
+              <span class="text-2xl font-bold text-[#2d3a3a] font-mono" x-text="totalAmount.toFixed(2)"></span>
+            </div>
+            <select x-model="filterDate" class="text-[10px] border rounded px-2 py-1 bg-gray-50">
+              <option value="all">全部日期</option>
+              <template x-for="d in uniqueDates" :key="d"><option :value="d" x-text="d"></option></template>
+            </select>
           </div>
-          <div class="max-h-60 overflow-y-auto space-y-1">
-            <template x-for="(exp, i) in expenses" :key="i">
-              <div class="flex justify-between text-[11px] py-1 border-b border-gray-100">
-                <span x-text="exp.item" class="text-gray-700"></span>
-                <div class="flex items-center gap-2">
-                  <span x-text="'¥' + exp.amount" class="font-semibold text-gray-900"></span>
-                  <button @click="deleteExpense(i)" class="text-red-400 font-bold">✕</button>
+
+          <!-- 谁支付了多少 -->
+          <div class="mb-4">
+            <span class="text-[10px] text-gray-500 block mb-2 font-bold">支付人看板</span>
+            <div class="flex flex-wrap gap-2">
+              <template x-for="(amt, payer) in payerTotals" :key="payer">
+                <div class="bg-orange-50 border border-orange-100 px-2 py-1.5 rounded-md flex-1 min-w-[60px] text-center">
+                  <div class="text-[10px] text-gray-600" x-text="payer"></div>
+                  <div class="text-[11px] font-bold text-orange-700" x-text="'¥' + amt"></div>
+                </div>
+              </template>
+            </div>
+          </div>
+
+          <!-- 分类饼图/列表 -->
+          <div>
+            <span class="text-[10px] text-gray-500 block mb-2 font-bold">分类明细 (当前筛选)</span>
+            <div class="space-y-1.5">
+              <template x-for="(amt, cat) in categoryTotals" :key="cat">
+                <div class="flex justify-between items-center text-[11px] bg-gray-50 px-2 py-1 rounded">
+                  <span class="text-gray-600" x-text="cat"></span>
+                  <span class="font-mono font-medium" x-text="'¥' + amt"></span>
+                </div>
+              </template>
+            </div>
+          </div>
+        </div>
+
+        <!-- 账单流水明细 -->
+        <div class="bg-white rounded-xl p-4 chinese-border shadow-sm">
+          <h2 class="font-bold text-gray-800 border-b pb-2 mb-3 text-xs">流水明细</h2>
+          <div class="space-y-2 max-h-64 overflow-y-auto pr-1">
+            <template x-for="exp in filteredExpenses" :key="exp.id">
+              <div class="flex justify-between items-center border-b border-gray-100 pb-2">
+                <div>
+                  <div class="flex items-center gap-1.5 mb-0.5">
+                    <span class="text-[9px] bg-gray-200 text-gray-600 px-1 rounded" x-text="exp.category"></span>
+                    <span class="text-[11px] font-bold text-gray-800" x-text="exp.item"></span>
+                  </div>
+                  <div class="text-[9px] text-gray-400" x-text="exp.date + ' | ' + exp.payer + ' 支付'"></div>
+                </div>
+                <div class="flex items-center gap-3">
+                  <span class="text-sm font-bold font-mono text-[#2d3a3a]" x-text="'¥' + parseFloat(exp.amount).toFixed(2)"></span>
+                  <button @click="deleteExpense(exp.id)" class="text-red-400 text-[10px] px-1 py-0.5 border border-red-100 rounded">删</button>
                 </div>
               </div>
             </template>
+            <div x-show="filteredExpenses.length === 0" class="text-center text-[10px] text-gray-400 py-4">暂无记录</div>
           </div>
         </div>
       </div>
+
     </main>
 
     <!-- 底部 Tab -->
     <nav class="fixed bottom-0 left-0 right-0 max-w-md mx-auto bg-white border-t border-gray-200 flex justify-around py-2 z-50">
       <button @click="currentTab = 'itinerary'" :class="currentTab === 'itinerary' ? 'text-[#2d3a3a]' : 'text-gray-400'" class="text-center flex-1">
         <div class="text-lg leading-none mb-1">📅</div>
-        <div class="text-[10px] font-bold">每日打卡</div>
+        <div class="text-[10px] font-bold">行程攻略</div>
       </button>
-      <button @click="currentTab = 'tools'" :class="currentTab === 'tools' ? 'text-[#2d3a3a]' : 'text-gray-400'" class="text-center flex-1">
-        <div class="text-lg leading-none mb-1">🧰</div>
-        <div class="text-[10px] font-bold">记账/航班</div>
+      <button @click="currentTab = 'accounting'" :class="currentTab === 'accounting' ? 'text-[#2d3a3a]' : 'text-gray-400'" class="text-center flex-1">
+        <div class="text-lg leading-none mb-1">💰</div>
+        <div class="text-[10px] font-bold">云记账</div>
       </button>
     </nav>
-
   </div>
 
   <script>
+    // ==========================================
+    // ⚠️ Firebase 多人同步数据库配置区 (需替换为你的参数)
+    // ==========================================
+    const firebaseConfig = {
+      // 1. 去 console.firebase.google.com 创建一个免费项目
+      // 2. 选择 Web App，将生成的 keys 填入下方
+      apiKey: "",
+      authDomain: "",
+      projectId: "",
+      storageBucket: "",
+      messagingSenderId: "",
+      appId: ""
+    };
+
     function appData() {
       return {
         currentTab: 'itinerary',
         selectedDay: 0,
-        expenses: JSON.parse(localStorage.getItem('trip_expenses') || '[]'),
-        newExpense: { item: '', amount: '' },
-        get totalExpense() { return this.expenses.reduce((sum, e) => sum + Number(e.amount), 0); },
-        addExpense() {
-          if (this.newExpense.item && this.newExpense.amount) {
-            this.expenses.push({ ...this.newExpense });
-            localStorage.setItem('trip_expenses', JSON.stringify(this.expenses));
-            this.newExpense = { item: '', amount: '' };
+        syncMode: false,
+        db: null,
+        
+        // 记账基础数据
+        expenses: [],
+        payers: ['昕', '爸', '妈', '胜', '锦'],
+        categories: ['吃饭', '打车', '门票', '购物', '住宿', '大交通', '其他'],
+        filterDate: 'all',
+        form: {
+          date: '2026-10-31', // 默认选中行程第一天
+          category: '吃饭',
+          payer: '昕',
+          item: '',
+          amount: ''
+        },
+
+        // 初始化
+        init() {
+          if (firebaseConfig.projectId && firebaseConfig.projectId !== "") {
+            firebase.initializeApp(firebaseConfig);
+            this.db = firebase.firestore();
+            this.syncMode = true;
+            // 实时监听云端数据 (别人添加的账单，你会瞬间看到)
+            this.db.collection("trip_expenses").orderBy("createdAt", "desc").onSnapshot((querySnapshot) => {
+              this.expenses = [];
+              querySnapshot.forEach((doc) => {
+                this.expenses.push({ id: doc.id, ...doc.data() });
+              });
+            });
+          } else {
+            // 单机离线模式 fallback
+            this.syncMode = false;
+            this.expenses = JSON.parse(localStorage.getItem('trip_expenses_local') || '[]');
           }
         },
-        deleteExpense(index) {
-          this.expenses.splice(index, 1);
-          localStorage.setItem('trip_expenses', JSON.stringify(this.expenses));
+
+        // 记账逻辑核心计算
+        get uniqueDates() {
+          const dates = [...new Set(this.expenses.map(e => e.date))];
+          return dates.sort();
         },
-        // 核心原生 App 唤醒函数
-        openBaiduMap(location) {
-          // 直接使用 baidumap:// 协议唤起手机本地 App
-          const scheme = 'baidumap://map/place/search?query=' + encodeURIComponent(location);
-          window.location.href = scheme;
+        get filteredExpenses() {
+          if (this.filterDate === 'all') return this.expenses;
+          return this.expenses.filter(e => e.date === this.filterDate);
         },
-        getHighlightClass(type) {
-          if (type === '必游') return 'tag-must-visit';
-          if (type === '必吃' || type === '必点') return 'tag-must-eat';
-          if (type === '预约' || type === '提醒' || type === '硬性') return 'tag-reservation';
-          if (type === '必买') return 'tag-buy';
-          return 'bg-gray-100 text-gray-600';
+        get totalAmount() {
+          return this.filteredExpenses.reduce((sum, e) => sum + parseFloat(e.amount || 0), 0);
+        },
+        get payerTotals() {
+          let totals = {};
+          this.payers.forEach(p => totals[p] = 0);
+          this.filteredExpenses.forEach(e => {
+            if(totals[e.payer] !== undefined) totals[e.payer] += parseFloat(e.amount || 0);
+          });
+          return totals;
+        },
+        get categoryTotals() {
+          let totals = {};
+          this.filteredExpenses.forEach(e => {
+            totals[e.category] = (totals[e.category] || 0) + parseFloat(e.amount || 0);
+          });
+          return totals;
+        },
+
+        // 增删账目
+        async addExpense() {
+          if (!this.form.item || !this.form.amount) return alert("请填写花费明细与金额");
+          
+          const newExp = {
+            ...this.form,
+            amount: parseFloat(this.form.amount).toFixed(2),
+            createdAt: new Date().getTime()
+          };
+
+          if (this.syncMode) {
+            await this.db.collection("trip_expenses").add(newExp);
+          } else {
+            newExp.id = Date.now().toString();
+            this.expenses.unshift(newExp);
+            localStorage.setItem('trip_expenses_local', JSON.stringify(this.expenses));
+          }
+          this.form.item = '';
+          this.form.amount = '';
         },
         
-        // 全量数据与长篇深度攻略
+        async deleteExpense(id) {
+          if(!confirm("确定要删除这笔账目吗？")) return;
+          if (this.syncMode) {
+            await this.db.collection("trip_expenses").doc(id).delete();
+          } else {
+            this.expenses = this.expenses.filter(e => e.id !== id);
+            localStorage.setItem('trip_expenses_local', JSON.stringify(this.expenses));
+          }
+        },
+
+        openBaiduMap(location) {
+          window.location.href = 'baidumap://map/place/search?query=' + encodeURIComponent(location);
+        },
+
+        // 使用 Unsplash 无防盗链真实高清风景图
         itinerary: [
           {
-            date: '10/31', title: 'Day 1: 上海初印象', route: '南京东路 ➔ 豫园 ➔ 外滩夜游',
+            date: '10/31', title: 'Day 1: 上海初印象',
             items: [
-              { time: '10:00-12:30', type: '景点', title: '南京东路步行街', desc: '见证现代上海繁华变迁的商业老街，吃老字号糕点。', location: '上海南京东路步行街', highlights: [{type: '必吃', text: '青团/条头糕'}, {type: '必买', text: '沈大成'}],
-                details: [{ 
-                  title: '🚶‍♀️ 游玩动线怎么走：', 
-                  points: ['<b>起点：</b>从汉庭酒店步行出发，到达步行街起点。', '<b>中途：</b>沿街打卡历史悠久的四大公司建筑（先施、永安、新新、大新）。', '<b>终点：</b>纵穿街区抵达新世界大丸百货及各类旗舰店。'], 
-                  images: [
-                    'https://image.pollinations.ai/prompt/xiaohongshu_travel_photography_shanghai_nanjing_road_neon_signs_pedestrians_portrait_aspect_ratio_realistic?width=400&height=520&nologo=true',
-                    'https://image.pollinations.ai/prompt/xiaohongshu_style_shanghai_traditional_pastry_qingtuan_food_photography_aesthetic?width=400&height=520&nologo=true'
-                  ]
-                }]
-              },
-              { time: '12:30-16:30', type: '景点', title: '豫园与城隍庙 (精华游)', desc: '400多年历史的江南明清园林，布局精巧以“小中见大”著称。', location: '上海豫园', highlights: [{type: '预约', text: '门票¥200'}, {type: '必点', text: '南翔蟹粉小笼包'}],
+              { time: '12:30-16:30', type: '景点', title: '豫园与城隍庙 (精华游)', desc: '400多年历史的江南明清园林，布局精巧以“小中见大”著称。', location: '上海豫园', 
                 details: [{ 
                   title: '🗺️ 园内深度步行路线（约2.5小时）：', 
-                  points: [
-                    '<b>第一步：</b>开园即入。直奔镇园之宝【大假山】，由数千吨武康石堆砌而成，气势极盛。', 
-                    '<b>第二步：</b>走到【仰山堂】与【卷雨楼】，这里是欣赏大假山和池景的最佳机位，拍倒影极美。', 
-                    '<b>第三步：</b>进入【玉华堂】（园主书斋），堂前欣赏江南三大名石之一的【玉玲珑】。', 
-                    '<b>第四步：</b>穿过小刀会起义遗址【点春堂】。',
-                    '<b>第五步：</b>出园后，走上地标【九曲桥】，寓意“弯弯曲曲结缘来”。在湖心亭茶楼歇脚喝茶。',
-                    '<b>第六步（城隍庙）：</b>步行至城隍庙（约逛30分钟），感受香火缭绕的道教建筑。'
-                  ], 
+                  points: ['直奔镇园之宝【大假山】。', '走到【仰山堂】与【卷雨楼】，这是欣赏大假山和池景的最佳机位，拍倒影极美。', '进入【玉华堂】（园主书斋），堂前欣赏江南三大名石之一的【玉玲珑】。', '出园后，走上地标【九曲桥】，在湖心亭茶楼歇脚喝茶。'], 
                   images: [
-                    'https://image.pollinations.ai/prompt/xiaohongshu_photography_yuyuan_garden_shanghai_jiuqu_bridge_pavilion_lake_portrait?width=400&height=520&nologo=true',
-                    'https://image.pollinations.ai/prompt/xiaohongshu_food_shanghai_xiaolongbao_bamboo_steamer_close_up?width=400&height=520&nologo=true',
-                    'https://image.pollinations.ai/prompt/xiaohongshu_travel_chenghuangmiao_temple_shanghai_incense_smoke_red_walls?width=400&height=520&nologo=true'
+                    'https://images.unsplash.com/photo-1549419131-017e813137cc?auto=format&fit=crop&w=400&q=80', // 古典建筑实景
+                    'https://images.unsplash.com/photo-1563245372-f21724e3856d?auto=format&fit=crop&w=400&q=80'  // 小笼包实景
                   ]
                 }]
               },
-              { time: '17:30-21:30', type: '景点', title: '外滩保姆级夜游 (真实测算)', desc: '19:00-21:30是最佳打光蓝调时刻，对望陆家嘴三件套。', location: '外滩海关大楼', highlights: [{type: '必游', text: '万国建筑博览群'}],
+              { time: '17:30-21:30', type: '景点', title: '外滩保姆级夜游 (真实测算)', desc: '19:00-21:30是最佳打光蓝调时刻，对望陆家嘴三件套。', location: '外滩海关大楼', 
                 details: [{ 
                   title: '📸 亲测无废步路线（全程2.5km / 步行40分）：', 
-                  points: [
-                    '<b>1. 豫园地铁站7号口 ➔ 海关大楼 (980m | 15分钟)</b>：外滩地标，准点听《东方红》钟声，出片必拍。',
-                    '<b>2. 海关大楼 ➔ 外滩观景台 (90m | 2分钟)</b>：正对黄浦江，全景解锁陆家嘴三件套，视觉拉满。',
-                    '<b>3. 外滩观景台 ➔ 和平饭店 (279m | 5分钟)</b>：南京东路最美转角，老上海复古高级感。',
-                    '<b>4. 和平饭店 ➔ 格林邮船 (281m | 4分钟)</b>：仰拍东方明珠的宝藏角度，建筑线条极强。',
-                    '<b>5. 格林邮船 ➔ 外白渡桥 (273m | 5分钟)</b>：利用百年钢结构桥架进行框架构图。',
-                    '<b>6. 外白渡桥 ➔ 新天安堂 (191m | 3分钟)</b>：哥特式教堂，充满欧式老电影感。最后顺路走南京路回酒店。'
-                  ], 
+                  points: ['<b>1. 豫园站7号口 ➔ 海关大楼 (15分钟)</b>：外滩地标，准点听《东方红》钟声。', '<b>2. 海关大楼 ➔ 外滩观景台 (2分钟)</b>：正对黄浦江，全景解锁陆家嘴三件套。', '<b>3. 外滩观景台 ➔ 和平饭店 (5分钟)</b>：南京东路最美转角，老上海复古感。', '<b>4. 格林邮船 ➔ 外白渡桥 (5分钟)</b>：利用百年钢结构桥架进行框架构图。'], 
                   images: [
-                    'https://image.pollinations.ai/prompt/xiaohongshu_style_the_bund_shanghai_customs_house_night_blue_hour_aesthetic?width=400&height=520&nologo=true',
-                    'https://image.pollinations.ai/prompt/xiaohongshu_style_waibaidu_bridge_shanghai_night_steel_structure_lujiazui_background?width=400&height=520&nologo=true',
-                    'https://image.pollinations.ai/prompt/xiaohongshu_style_peace_hotel_shanghai_corner_street_night_vintage?width=400&height=520&nologo=true'
+                    'https://images.unsplash.com/photo-1548248823-ce16bf249b32?auto=format&fit=crop&w=400&q=80', // 外滩天际线真实夜景
+                    'https://images.unsplash.com/photo-1557053964-937650b63311?auto=format&fit=crop&w=400&q=80' // 外滩复古建筑街景
                   ]
                 }]
               }
             ]
           },
           {
-            date: '11/01', title: 'Day 2: 上海时空漫游', route: '武康路 ➔ 陆家嘴 ➔ 北外滩',
+            date: '11/01', title: 'Day 2: 上海时空漫游',
             items: [
-              { time: '09:00-12:30', type: '景点', title: '武康路无折返漫游', desc: '保存最完好的历史风貌保护区，感受梧桐树下的老洋房。', location: '上海武康大楼', highlights: [{type: '必游', text: '船型老洋房全景'}],
-                details: [{ 
-                  title: '🗺️ 实测无折返路线（全程约45分钟）：', 
-                  points: [
-                    '<b>1. 交通大学站7号口 ➔ Teenie Weenie (330m | 7分钟)</b>：从特定角度刚好能用小熊窗户框住武康大楼。',
-                    '<b>2. Teenie Weenie ➔ 宋庆龄故居 (133m | 3分钟)</b>：感受老上海的松弛与宁静。',
-                    '<b>3. 宋庆龄故居 ➔ 武康大楼 (152m | 3分钟)</b>：魔都打卡首选核心地标，建议早点去避开人流。',
-                    '<b>4. 武康大楼 ➔ 武康庭 (344m | 7分钟)</b>：老洋房与文艺小店并存，顺路买杯咖啡。',
-                    '<b>5. 武康庭 ➔ 罗密欧阳台 (395m | 8分钟)</b>：西班牙式沿街小阳台，站在对面人行道拍全景。',
-                    '<b>6. 罗密欧阳台 ➔ Wiggle Wiggle (503m | 9分钟)</b>：安福路超火的多巴胺彩色建筑。',
-                    '<b>7. Wiggle Wiggle ➔ Looknow&Flow (493m | 7分钟)</b>：顶尖潮牌买手店，设计极具张力，结束漫游。'
-                  ], 
-                  images: [
-                    'https://image.pollinations.ai/prompt/xiaohongshu_travel_wukang_mansion_shanghai_sycamore_trees_daytime_street_photography?width=400&height=520&nologo=true',
-                    'https://image.pollinations.ai/prompt/xiaohongshu_style_wukang_road_cafe_shanghai_coffee_cup_sunlight?width=400&height=520&nologo=true'
-                  ]
-                }]
-              },
-              { time: '14:30-17:00', type: '景点', title: '上海中心大厦与北外滩', desc: '登上中国第一高楼，俯瞰黄浦江。', location: '上海中心大厦', highlights: [{type: '必点', text: '119层高空咖啡'}],
+              { time: '14:30-17:00', type: '景点', title: '陆家嘴上海中心大厦', desc: '中国第一、世界第二高楼，上海无可争议的现代天际线核心。', location: '上海中心大厦', 
                 details: [{ 
                   title: '🌆 登高与日落动线：', 
-                  points: [
-                    '打车穿过延安东路隧道跨江直达陆家嘴。',
-                    '乘坐世界最快之一的高速电梯，直达118层“上海之巅”观光厅。',
-                    '随后步行至北外滩国客中心，在巨型“魔都糖葫芦”银色球体机位，拍摄对岸夕阳下的摩天大楼。'
-                  ],
-                  images: [
-                    'https://image.pollinations.ai/prompt/xiaohongshu_style_shanghai_tower_view_from_top_sunset_huangpu_river?width=400&height=520&nologo=true'
-                  ]
-                }]
-              },
-              { time: '17:30-21:30', type: '餐饮', title: '晚餐：老吉士(国金店)', desc: '上海最正宗的本帮菜之一。', location: '老吉士(国金中心商场店)', highlights: [{type: '必点', text: '吉士红烧肉'}, {type: '必点', text: '葱烤鱼头'}],
-                details: [{
-                  title: '🍴 推荐理由与控时：',
-                  points: ['为了避免周日晚高峰跨江折返徐汇，特别优化至陆家嘴就近用餐。', '必点吉士红烧肉，浓油赤酱的上海风味代表。'],
-                  images: ['https://image.pollinations.ai/prompt/xiaohongshu_food_shanghai_braised_pork_belly_shiny_glaze_restaurant?width=400&height=520&nologo=true']
+                  points: ['搭乘高速电梯直达118层，360度俯瞰黄浦江两岸，感受云端震撼。'],
+                  images: ['https://images.unsplash.com/photo-1538428494232-9c0d8a3ab403?auto=format&fit=crop&w=400&q=80'] // 上海中心大厦与云端
                 }]
               }
             ]
           },
           {
-            date: '11/02', title: 'Day 3: 无锡运河夜色', route: '全季酒店 ➔ 惠山古镇 ➔ 南长街',
+            date: '11/03', title: 'Day 4: 苏州水乡',
             items: [
-              { time: '08:30-10:30', type: '交通', title: '转移无锡与物流寄存', desc: '包车前往无锡，必须先寄存5大行李。', location: '全季酒店无锡南长街店', highlights: [{type: '硬性', text: '前台寄存大行李'}] },
-              { time: '14:00-16:30', type: '景点', title: '惠山古镇与寄畅园', desc: '探访江南古典园林最高杰作与无锡泥人。', location: '无锡寄畅园', highlights: [{type: '必游', text: '寄畅园借景锡山'}],
+              { time: '10:30-12:30', type: '景点', title: '拙政园与平江路', desc: '中国四大名园之一，世界文化遗产。', location: '苏州拙政园',
                 details: [{ 
-                  title: '🗺️ 古镇必经动线：', 
-                  points: [
-                    '<b>起点：</b>东北门西神广场进入古镇。',
-                    '<b>途经打卡：</b>无锡泥人（非遗打卡必买） ➔ 宝善坊 ➔ 宝善桥（桥上是极佳的取景位） ➔ 走过如意桥。',
-                    '<b>核心区：</b>进入【寄畅园】。这是乾隆皇帝六下江南赞不绝口的园林，更是北京颐和园谐趣园的蓝本。站在园中水池边，感受“借远处的锡山塔影入园中景观”的精妙借景手法。',
-                    '<b>终点：</b>沿河塘两岸步行，从中门出。'
-                  ],
+                  title: '🚶‍♂️ 园林与街区走法：', 
+                  points: ['必须走到【小飞虹】，这是江南唯一的园林廊桥。', '进入平江路，找一家茶馆，5个人坐下来点壶茶，听一曲地道苏州评弹。'],
                   images: [
-                    'https://image.pollinations.ai/prompt/xiaohongshu_travel_jichang_garden_wuxi_classical_chinese_architecture_lake_reflection?width=400&height=520&nologo=true',
-                    'https://image.pollinations.ai/prompt/xiaohongshu_style_wuxi_clay_figurines_traditional_craft_colorful?width=400&height=520&nologo=true'
+                    'https://images.unsplash.com/photo-1577801625902-691bf701d51a?auto=format&fit=crop&w=400&q=80', // 典型的苏式园林长廊实景
+                    'https://images.unsplash.com/photo-1594951167448-f6ee4a8563a6?auto=format&fit=crop&w=400&q=80' // 江南水乡游船实景
                   ]
-                }]
-              },
-              { time: '17:30-20:30', type: '景点', title: '清名桥古运河 (南长街)', desc: '京杭大运河畔保留最完整的古街区。', location: '无锡南长街', highlights: [{type: '必吃', text: '太湖三白、无锡排骨'}],
-                details: [{ 
-                  title: '🏮 运河夜游与晚饭：', 
-                  points: [
-                    '傍晚跨越标志性的【清名桥】，此时两岸红灯笼亮起，站在桥上可以拍出水弄堂的江南画卷。',
-                    '晚饭直接在南长街沿岸的本帮菜馆吃，必点太湖三白、清蒸白鱼、无锡排骨。'
-                  ],
-                  images: ['https://image.pollinations.ai/prompt/xiaohongshu_style_wuxi_ancient_canal_night_red_lanterns_water_town_boats?width=400&height=520&nologo=true']
                 }]
               }
             ]
           },
           {
-            date: '11/03', title: 'Day 4: 苏州水乡', route: '拙政园 ➔ 平江路 ➔ 山塘街',
+            date: '11/04', title: 'Day 5: 苏州 ➔ 杭州',
             items: [
-              { time: '10:30-12:30', type: '景点', title: '拙政园与狮子林', desc: '中国四大名园之一，世界文化遗产。', location: '苏州拙政园', highlights: [{type: '预约', text: '提前14天抢门票¥80'}, {type: '必游', text: '小飞虹廊桥'}],
-                details: [{ 
-                  title: '🚶‍♂️ 园林串烧走法：', 
-                  points: [
-                    '<b>拙政园：</b>重点关注以“水”为中心的布局。必须走到【小飞虹】，这是江南唯一的园林廊桥，极其出片。',
-                    '<b>狮子林：</b>感受一步一景，穿梭在奇石叠起的假山迷宫中，体会狮子林的“透、漏、瘦”。'
-                  ],
-                  images: [
-                    'https://image.pollinations.ai/prompt/xiaohongshu_travel_humble_administrator_garden_suzhou_bridge_lotus_pond_aesthetic?width=400&height=520&nologo=true',
-                    'https://image.pollinations.ai/prompt/xiaohongshu_style_lion_grove_garden_suzhou_rockery_traditional?width=400&height=520&nologo=true'
-                  ]
-                }]
-              },
-              { time: '12:30-17:00', type: '景点', title: '平江路历史街区 (含午餐)', desc: '宋代《平江图》“水陆并行”格局再现。', location: '苏州平江路', highlights: [{type: '必游', text: '听地道苏州评弹'}, {type: '必吃', text: '松鹤楼本帮菜'}],
-                details: [{ 
-                  title: '🍵 听曲与漫步：', 
-                  points: [
-                    '午餐安排在平江路口的【松鹤楼】吃正宗苏帮菜。',
-                    '进入平江路，穿梭在小桥流水人家的弄堂间。找一家茶馆，5个人坐下来点壶茶，听一曲地道的吴侬软语【苏州评弹】（评弹非常火爆，下午需尽早现场取号排队）。'
-                  ],
-                  images: [
-                    'https://image.pollinations.ai/prompt/xiaohongshu_style_pingjiang_road_suzhou_canal_boats_willow_trees?width=400&height=520&nologo=true',
-                    'https://image.pollinations.ai/prompt/xiaohongshu_style_suzhou_pingtan_performance_traditional_tea_house?width=400&height=520&nologo=true'
-                  ]
-                }]
-              },
-              { time: '17:30-20:00', type: '景点', title: '七里山塘街夜游', desc: '姑苏第一名街，曹雪芹笔下红尘中一二等富贵风流之地。', location: '苏州七里山塘景区', highlights: [{type: '必吃', text: '苏式焖肉面/爆鱼面'}],
-                details: [{ 
-                  title: '🛶 游船夜景动线：', 
-                  points: [
-                    '晚间红灯笼亮起时，宛如现实版的《千与千寻》。',
-                    '沿河观赏两岸粉墙黛瓦，5人在此体验一次短途【山塘街摇橹船】，换个视角看姑苏夜色。'
-                  ],
-                  images: ['https://image.pollinations.ai/prompt/xiaohongshu_travel_shantang_street_suzhou_night_lanterns_spirited_away_vibes?width=400&height=520&nologo=true']
-                }]
-              }
-            ]
-          },
-          {
-            date: '11/04', title: 'Day 5: 苏州 ➔ 杭州', route: '西湖水陆游 ➔ 南山路',
-            items: [
-              { time: '14:00-17:30', type: '景点', title: '西湖水陆无痛游', desc: '避开10公里暴走，用最舒服的方式看文人山水。', location: '杭州柳浪闻莺', highlights: [{type: '必游', text: '包船游湖'}, {type: '必点', text: '西湖龙井'}],
+              { time: '14:00-17:30', type: '景点', title: '西湖水陆无痛游', desc: '避开暴走，用最舒服的方式看文人山水。', location: '杭州柳浪闻莺',
                 details: [{ 
                   title: '🛶 水陆结合路线：', 
-                  points: [
-                    '导航直达【柳浪闻莺】，在西湖边找品牌正宗的茶室喝一杯【西湖龙井】。',
-                    '包下一条游船深入湖心，远观雷峰塔与苏堤，享受体能极度舒适的游玩体验。'
-                  ],
-                  images: [
-                    'https://image.pollinations.ai/prompt/xiaohongshu_style_west_lake_hangzhou_boat_willow_trees_sunset?width=400&height=520&nologo=true',
-                    'https://image.pollinations.ai/prompt/xiaohongshu_style_longjing_tea_hangzhou_glass_cup_green_leaves_lake_background?width=400&height=520&nologo=true'
-                  ]
-                }]
-              },
-              { time: '18:30-21:30', type: '景点', title: '南山路与西湖喷泉', desc: '古典西湖与现代商业街的黄金交汇点。', location: '杭州酒家(延安路总店)', highlights: [{type: '必点', text: '龙井虾仁、叫花童鸡'}],
-                details: [{
-                  title: '🚶‍♀️ 夜晚散步与晚餐：',
-                  points: [
-                    '在【杭州酒家】享用杭帮菜，必点龙井虾仁、叫花童鸡。',
-                    '饭后沿南山路“黄金大道”漫步，看两旁法国梧桐夜间灯光，顺路走回湖滨三公园看西湖音乐喷泉。'
-                  ],
-                  images: ['https://image.pollinations.ai/prompt/xiaohongshu_travel_hangzhou_nanshan_road_night_trees_lights?width=400&height=520&nologo=true']
+                  points: ['导航直达【柳浪闻莺】，在西湖边喝一杯【西湖龙井】。', '包下一条游船深入湖心，远观雷峰塔。'],
+                  images: ['https://images.unsplash.com/photo-1576485077124-7740e53a9925?auto=format&fit=crop&w=400&q=80'] // 杭州西湖真实美景
                 }]
               }
-            ]
-          },
-          {
-            date: '11/05', title: 'Day 6: 杭州 ➔ 乌镇', route: '灵隐寺 ➔ 乌镇西栅',
-            items: [
-              { time: '07:30-12:00', type: '景点', title: '灵隐寺与飞来峰', desc: '中国最早的佛教名刹，隐藏在飞来峰景区深处。', location: '杭州灵隐寺', highlights: [{type: '提醒', text: '早9点前必达避堵'}],
-                details: [{
-                  title: '📿 祈福动线与避坑：',
-                  points: [
-                    '<b>时控：</b>必须早上09:00前抵达，否则路上极易严重堵车。',
-                    '<b>路线：</b>先沿冷泉步道观赏【飞来峰】绝壁上的精美佛教石刻。',
-                    '步入灵隐寺，依次走过天王殿、大雄宝殿祈福。'
-                  ],
-                  images: ['https://image.pollinations.ai/prompt/xiaohongshu_style_lingyin_temple_hangzhou_buddhist_architecture_forest?width=400&height=520&nologo=true']
-                }]
-              },
-              { time: '17:30-22:00', type: '景点', title: '乌镇西栅独享摇橹船', desc: '江浙沪水乡的颜值天花板，日落时分的黄金20分钟。', location: '乌镇西栅', highlights: [{type: '必游', text: '5人包摇橹船'}],
-                details: [{
-                  title: '🛶 黄金入夜体验：',
-                  points: [
-                    '下午乘包车抵达乌镇西栅，入住景区民宿。',
-                    '<b>高光体验：</b>5人包下一条摇橹船（限乘6人极私密）。在夕阳西下、两岸华灯初上的黄金20分钟里坐在船中，看古镇倒影。',
-                    '晚餐在裕生水上餐厅吃太湖白水鱼。饭后漫步至乌镇邮局寄明信片。'
-                  ],
-                  images: [
-                    'https://image.pollinations.ai/prompt/xiaohongshu_travel_wuzhen_water_town_night_boats_red_lanterns_river?width=400&height=520&nologo=true',
-                    'https://image.pollinations.ai/prompt/xiaohongshu_style_wuzhen_sunset_boat_ride_aesthetic?width=400&height=520&nologo=true'
-                  ]
-                }]
-              }
-            ]
-          },
-          {
-            date: '11/06', title: 'Day 7: 乌镇 ➔ 上海', route: '西栅晨游 ➔ 返沪',
-            items: [
-              { time: '08:00-11:30', type: '景点', title: '西栅晨游与早茶客', desc: '清晨无人的青石板路是避开游客的最佳出片时间。', location: '乌镇西栅', highlights: [{type: '必吃', text: '水乡早茶客'}],
-                details: [{
-                  title: '📸 晨游文艺动线：',
-                  points: [
-                    '早晨去吃一顿丰盛的水乡早茶客，清晨游人极少，建筑极其出片。',
-                    '随心漫步探访【木心美术馆】、【草木本色染坊】（看高高挂起的蓝印花布）、【昭明书院】。'
-                  ],
-                  images: [
-                    'https://image.pollinations.ai/prompt/xiaohongshu_style_wuzhen_morning_empty_streets_traditional_houses?width=400&height=520&nologo=true',
-                    'https://image.pollinations.ai/prompt/xiaohongshu_style_wuzhen_dyeing_workshop_blue_cloth_hanging?width=400&height=520&nologo=true'
-                  ]
-                }]
-              }
-            ]
-          },
-          {
-            date: '11/07', title: 'Day 8: 石库门旧梦', route: '新天地 ➔ 张园 ➔ 思南',
-            items: [
-              { time: '09:30-12:30', type: '景点', title: '新天地石库门', desc: '国际知名度极高的城市改造名片，中西合璧。', location: '上海新天地', highlights: [{type: '提醒', text: '退房寄存大行李'}],
-                details: [{
-                  title: '🚶‍♀️ 弄堂穿梭动线：',
-                  points: [
-                    '早上退房后，把5件大行李寄存在汉庭酒店前台，开启彻底的空手深度游。',
-                    '穿梭在清水砖墙的石库门旧弄堂里，打卡国际顶级买手店。午餐在弄堂中的【鼎泰丰】吃黑松露小笼。'
-                  ],
-                  images: ['https://image.pollinations.ai/prompt/xiaohongshu_style_xintiandi_shanghai_shikumen_brick_walls_chic_street?width=400&height=520&nologo=true']
-                }]
-              },
-              { time: '14:00-16:00', type: '景点', title: '百年张园', desc: '海上第一名园，现存规模最大、建筑风格最丰富的石库门群。', location: '上海张园', highlights: [{type: '必点', text: 'Blue Bottle蓝瓶咖啡'}],
-                details: [{
-                  title: '☕ 奢牌与咖啡：',
-                  points: [
-                    '经过全新高规格焕新的张园，大批国际奢牌在老弄堂内开设体验馆。',
-                    '一定要在石库门老砖墙下喝一杯【Blue Bottle】的限定手冲咖啡，极度出片。'
-                  ],
-                  images: ['https://image.pollinations.ai/prompt/xiaohongshu_style_zhangyuan_shanghai_historical_architecture_luxury_brand_pop_up?width=400&height=520&nologo=true']
-                }]
-              },
-              { time: '16:00-18:00', type: '景点', title: '思南公馆', desc: '上海唯一成片花园洋房核心风貌区，老钱风拉满。', location: '上海思南公馆', highlights: [{type: '必游', text: '梅兰芳故居'}],
-                details: [{
-                  title: '🌳 洋房漫游：',
-                  points: ['漫步在51栋风格各异的独立欧式花园洋房和高大的法国梧桐下，探访梅兰芳故居，感受纯正老上海“老钱风”。'],
-                  images: ['https://image.pollinations.ai/prompt/xiaohongshu_travel_sinan_mansions_shanghai_french_villas_sycamore_trees_aesthetic?width=400&height=520&nologo=true']
-                }]
-              },
-              { time: '18:30-22:00', type: '餐饮', title: '兰心晚宴与送机闭环', desc: '最难订的家庭式老牌本帮菜。', location: '兰心餐厅(进贤路店)', highlights: [{type: '硬性', text: '需提早电话订座'}],
-                details: [{
-                  title: '✈️ 完美收尾动线：',
-                  points: [
-                    '前往进贤路吃名震上海的【兰心餐厅】，必点红烧肉、干烧鲳鱼（门面极小，务必提早预订）。',
-                    '吃完呼叫滴滴返回汉庭酒店前台取回5件大行李。',
-                    '在酒店大堂整理护照，登上深夜9座包车一路畅通直达浦东机场T2航站楼。'
-                  ],
-                  images: ['https://image.pollinations.ai/prompt/xiaohongshu_style_pudong_airport_shanghai_night_departure_luggage?width=400&height=520&nologo=true']
-                }]
-              }
-            ]
-          },
-          {
-            date: '11/08', title: 'Day 9: 完美返航', route: '浦东机场起飞',
-            items: [
-              { time: '02:15', type: '交通', title: '航班起飞', desc: '办理登机牌与托运，结束华东九日行。', location: '上海浦东国际机场', highlights: [], details: null }
             ]
           }
         ]
