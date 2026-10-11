@@ -39,6 +39,15 @@
 
     <main class="flex-1 p-4">
       
+      <!-- 新增：顶部双 Tab 切换器 -->
+      <div class="flex bg-gray-200/60 rounded-lg p-1 mb-4">
+        <button @click="currentTab = 'todo'" :class="currentTab === 'todo' ? 'bg-white shadow text-[#2d3a3a]' : 'text-gray-500'" class="flex-1 py-2 text-xs font-bold rounded-md transition-all">✅ 出发前必做</button>
+        <button @click="currentTab = 'itinerary'" :class="currentTab === 'itinerary' ? 'bg-white shadow text-[#2d3a3a]' : 'text-gray-500'" class="flex-1 py-2 text-xs font-bold rounded-md transition-all">📅 每日行程</button>
+      </div>
+
+      <!-- 原有行程模块外壳开始 -->
+      <div x-show="currentTab === 'itinerary'">
+      
       <!-- 天数切换滑块 -->
       <div class="flex overflow-x-auto space-x-2 pb-3 mb-3 border-b border-gray-300 no-scrollbar">
         <template x-for="(day, index) in itinerary" :key="index">
@@ -117,7 +126,78 @@
           </div>
         </template>
       </div>
+</div>
+      </div>
+      <!-- 原有行程模块外壳结束 -->
 
+      <!-- ================= 模块二：出发前必做的事情List ================= -->
+      <div x-show="currentTab === 'todo'" class="space-y-4" style="display: none;">
+        <div class="bg-white rounded-xl p-4 chinese-border shadow-sm">
+          <h2 class="font-bold text-gray-800 border-b pb-2 mb-4 flex items-center gap-2">
+            <span class="text-lg">📋</span> 行前任务清单
+          </h2>
+          
+          <!-- 1. 基础准备 -->
+          <div class="mb-5">
+            <h3 class="text-[11px] font-bold text-gray-400 mb-2 uppercase tracking-wider">基础准备</h3>
+            <ul class="space-y-2.5 text-xs text-gray-700 font-medium">
+              <li class="flex items-center gap-2"><input type="checkbox" class="w-4 h-4 accent-[#2d3a3a] rounded"> <span>1) 买 SIM card</span></li>
+              <li class="flex items-center gap-2"><input type="checkbox" class="w-4 h-4 accent-[#2d3a3a] rounded"> <span>2) Check Alipay password</span></li>
+              <li class="flex items-center gap-2"><input type="checkbox" class="w-4 h-4 accent-[#2d3a3a] rounded"> <span>3) 换钱 (Wise / WeChat)</span></li>
+            </ul>
+          </div>
+
+          <!-- 2. 重要预约与买门票 -->
+          <div class="mb-5">
+            <h3 class="text-[11px] font-bold text-gray-400 mb-2 uppercase tracking-wider">重要预约 / 买门票</h3>
+            <ul class="space-y-3.5 text-xs text-gray-700">
+              <li class="flex items-start gap-2.5">
+                <input type="checkbox" class="mt-0.5 w-4 h-4 accent-[#2d3a3a] shrink-0 rounded"> 
+                <div class="leading-relaxed">
+                  <span class="font-bold text-[#b06000] bg-orange-50 px-1 rounded">10月25日</span><br>
+                  预约上海朵云书院（旗舰店）：免费入场，但强制消费（一杯饮料约40-60元）。需提前1-7天在“朵云书院”小程序预约。名额有限，无预约无法上上海中心大厦。
+                </div>
+              </li>
+              <li class="flex items-start gap-2.5">
+                <input type="checkbox" class="mt-0.5 w-4 h-4 accent-[#2d3a3a] shrink-0 rounded"> 
+                <div class="leading-relaxed">
+                  <span class="font-bold text-[#b06000] bg-orange-50 px-1 rounded">10月27日</span><br>
+                  在“君到苏州”小程序买 Day 4（11月3日）拙政园门票（80元）。
+                </div>
+              </li>
+              <li class="flex items-start gap-2.5">
+                <input type="checkbox" class="mt-0.5 w-4 h-4 accent-[#2d3a3a] shrink-0 rounded"> 
+                <div class="leading-relaxed">
+                  <span class="font-bold text-red-600 bg-red-50 px-1 rounded border border-red-100">10月31日 凌晨12点</span><br>
+                  准点预约上海博物馆。
+                </div>
+              </li>
+            </ul>
+          </div>
+
+          <!-- 3. 航班 Check-in -->
+          <div>
+            <h3 class="text-[11px] font-bold text-gray-400 mb-2 uppercase tracking-wider">飞机 Check-in (起飞前48小时)</h3>
+            <ul class="space-y-3 text-xs text-gray-700">
+              <li class="flex items-center gap-2.5">
+                <input type="checkbox" class="w-4 h-4 accent-[#2d3a3a] shrink-0 rounded"> 
+                <div>
+                  <span class="font-bold text-[#2d3a3a] border border-[#2d3a3a] px-1 rounded text-[10px]">去程</span> 
+                  10月28日 19:35 Check-in
+                </div>
+              </li>
+              <li class="flex items-center gap-2.5">
+                <input type="checkbox" class="w-4 h-4 accent-[#2d3a3a] shrink-0 rounded"> 
+                <div>
+                  <span class="font-bold text-[#2d3a3a] border border-[#2d3a3a] px-1 rounded text-[10px]">回程</span> 
+                  11月6日 02:15 Check-in
+                </div>
+              </li>
+            </ul>
+          </div>
+
+        </div>
+      </div>
     </main>
 
   </div>
@@ -125,6 +205,7 @@
   <script>
     function appData() {
       return {
+        currentTab: 'todo',
         selectedDay: 0,
 
         openBaiduMap(location) {
