@@ -82,7 +82,22 @@
                     </ul>
                   </section>
                 </template>
-                <template x-if="item.links.length"><div class="mb-3 text-[11px] text-gray-500"><p>Excel 保留的原参考（非官方运营保证）：</p><template x-for="(link,linkIndex) in item.links" :key="link"><a :href="link" target="_blank" rel="noopener noreferrer" class="inline-block underline mr-3 py-2" x-text="'原参考 '+(linkIndex+1)"></a></template></div></template>
+                <template x-if="item.references.length || item.xhsSearches.length">
+                  <section class="mb-3 text-[11px] text-gray-600">
+                    <h4 class="font-bold text-gray-800 mb-2 border-l-2 border-[#2d3a3a] pl-2">📕 小红书参考</h4>
+                    <template x-for="ref in item.references" :key="ref.url">
+                      <div class="mb-2 bg-rose-50 rounded-lg p-2">
+                        <a :href="ref.url" target="_blank" rel="noopener noreferrer" class="block underline text-rose-700 py-2 leading-relaxed text-wrap-safe" x-text="'查看帖子 · '+ref.title"></a>
+                        <p class="text-[10px] text-gray-500 leading-relaxed" x-text="ref.kind+'：'+ref.note"></p>
+                      </div>
+                    </template>
+                    <p x-show="!item.references.length" class="text-[10px] leading-relaxed mb-2">暂未取得可核实的相关帖子原址，以下提供搜索入口。</p>
+                    <template x-for="search in item.xhsSearches" :key="search.label">
+                      <a :href="search.url" target="_blank" rel="noopener noreferrer" class="block underline py-2 leading-relaxed" x-text="'小红书搜索 · '+search.label"></a>
+                    </template>
+                    <p class="text-[10px] leading-relaxed mt-2">搜索入口不是单篇帖子。帖子仅作照片与游览灵感参考，旧票价、预约、季节活动和路线可能不适用于本次行程；本页时间安排优先。若网页要求登录，请在小红书 App 查看或搜索上面的景点关键词。</p>
+                  </section>
+                </template>
               </div>
             </div>
             <div class="pt-2 border-t border-gray-100 mt-2 space-y-2">
@@ -101,7 +116,7 @@
         </template>
       </div>
       <footer class="mt-6 text-[11px] text-gray-500 leading-relaxed space-y-2">
-        <p>行程依据：华东自由行_优化版.xlsx。保留表内条件安排、预算及待确认事项；车程为规划估算。</p>
+        <p>行程依据：华东自由行_优化版.xlsx；Day 2 已按你的最新要求调整为陆家嘴散步和咖啡休息。保留表内条件安排、预算及待确认事项；车程为规划估算。</p>
         <p>地图使用：手机点击“百度地图”尝试打开 App，首次可能需要允许浏览器打开百度地图。未成功时点击网页版。请核对搜索结果的地址，再选择“到这去／导航”；微信等内置浏览器可尝试在系统浏览器打开。</p>
         <p>Excel 未提供已核实的地点坐标／POI 编号，因此使用城市＋地点名称搜索，不虚构精确坐标。未确定分店、民宿及码头入口须先确认。App 跳转受设备、安装状态和浏览器限制，不能保证自动成功。</p>
       </footer>
@@ -225,7 +240,9 @@
             "note": "酒店名称沿用 Excel；请与订单的地址、电话核对，勿直接选择同名分店。"
           }
         ],
-        "links": []
+        "links": [],
+        "references": [],
+        "xhsSearches": []
       },
       {
         "row": 12,
@@ -263,6 +280,20 @@
         ],
         "links": [
           "http://xhslink.com/o/A4P5FfSR0Dm"
+        ],
+        "references": [
+          {
+            "url": "http://xhslink.com/o/A4P5FfSR0Dm",
+            "title": "原参考 1",
+            "kind": "Excel 原有链接",
+            "note": "保留你的原参考帖子。"
+          }
+        ],
+        "xhsSearches": [
+          {
+            "label": "上海 南京东路步行街",
+            "url": "https://www.xiaohongshu.com/search_result?keyword=%E4%B8%8A%E6%B5%B7%20%E5%8D%97%E4%BA%AC%E4%B8%9C%E8%B7%AF%E6%AD%A5%E8%A1%8C%E8%A1%97&source=web_explore_feed"
+          }
         ]
       },
       {
@@ -343,6 +374,30 @@
         "links": [
           "http://xhslink.com/o/8NuBTPf49n4",
           "http://xhslink.com/o/1dN9NOsTlpN"
+        ],
+        "references": [
+          {
+            "url": "http://xhslink.com/o/8NuBTPf49n4",
+            "title": "原参考 1",
+            "kind": "Excel 原有链接",
+            "note": "保留你的原参考帖子。"
+          },
+          {
+            "url": "http://xhslink.com/o/1dN9NOsTlpN",
+            "title": "原参考 2",
+            "kind": "Excel 原有链接",
+            "note": "保留你的原参考帖子。"
+          }
+        ],
+        "xhsSearches": [
+          {
+            "label": "上海 豫园",
+            "url": "https://www.xiaohongshu.com/search_result?keyword=%E4%B8%8A%E6%B5%B7%20%E8%B1%AB%E5%9B%AD&source=web_explore_feed"
+          },
+          {
+            "label": "上海 城隍庙 九曲桥",
+            "url": "https://www.xiaohongshu.com/search_result?keyword=%E4%B8%8A%E6%B5%B7%20%E5%9F%8E%E9%9A%8D%E5%BA%99%20%E4%B9%9D%E6%9B%B2%E6%A1%A5&source=web_explore_feed"
+          }
         ]
       },
       {
@@ -414,6 +469,20 @@
         ],
         "links": [
           "http://xhslink.com/o/2i80w2gF4ya"
+        ],
+        "references": [
+          {
+            "url": "http://xhslink.com/o/2i80w2gF4ya",
+            "title": "原参考 1",
+            "kind": "Excel 原有链接",
+            "note": "保留你的原参考帖子。"
+          }
+        ],
+        "xhsSearches": [
+          {
+            "label": "上海 外滩 外白渡桥",
+            "url": "https://www.xiaohongshu.com/search_result?keyword=%E4%B8%8A%E6%B5%B7%20%E5%A4%96%E6%BB%A9%20%E5%A4%96%E7%99%BD%E6%B8%A1%E6%A1%A5&source=web_explore_feed"
+          }
         ]
       }
     ],
@@ -454,7 +523,21 @@
             "note": "核对地图结果的地址后，再点“到这去／导航”。"
           }
         ],
-        "links": []
+        "links": [],
+        "references": [
+          {
+            "url": "https://www.xiaohongshu.com/explore/696f5040000000000a03e3fe",
+            "title": "徐家汇➕美罗城一日逛吃攻略🔥（附路线图）",
+            "kind": "公开索引原帖",
+            "note": "原帖地址来自公开参考页；小红书可能要求登录或在 App 内打开，当前可见性未实测。"
+          }
+        ],
+        "xhsSearches": [
+          {
+            "label": "上海 徐家汇天主堂",
+            "url": "https://www.xiaohongshu.com/search_result?keyword=%E4%B8%8A%E6%B5%B7%20%E5%BE%90%E5%AE%B6%E6%B1%87%E5%A4%A9%E4%B8%BB%E5%A0%82&source=web_explore_feed"
+          }
+        ]
       },
       {
         "row": 55,
@@ -489,7 +572,21 @@
             "note": "核对地图结果的地址后，再点“到这去／导航”。"
           }
         ],
-        "links": []
+        "links": [],
+        "references": [
+          {
+            "url": "https://www.xiaohongshu.com/explore/695e8f3f000000001a02bdab",
+            "title": "上海徐家汇书院，光与书的完美邂逅",
+            "kind": "公开索引原帖",
+            "note": "原帖地址来自公开参考页；小红书可能要求登录或在 App 内打开，当前可见性未实测。"
+          }
+        ],
+        "xhsSearches": [
+          {
+            "label": "上海 徐家汇书院",
+            "url": "https://www.xiaohongshu.com/search_result?keyword=%E4%B8%8A%E6%B5%B7%20%E5%BE%90%E5%AE%B6%E6%B1%87%E4%B9%A6%E9%99%A2&source=web_explore_feed"
+          }
+        ]
       },
       {
         "row": 59,
@@ -526,6 +623,20 @@
         ],
         "links": [
           "http://xhslink.com/o/8rHxW9eZrUT"
+        ],
+        "references": [
+          {
+            "url": "http://xhslink.com/o/8rHxW9eZrUT",
+            "title": "原参考 1",
+            "kind": "Excel 原有链接",
+            "note": "保留你的原参考帖子。"
+          }
+        ],
+        "xhsSearches": [
+          {
+            "label": "上海 武康路 安福路",
+            "url": "https://www.xiaohongshu.com/search_result?keyword=%E4%B8%8A%E6%B5%B7%20%E6%AD%A6%E5%BA%B7%E8%B7%AF%20%E5%AE%89%E7%A6%8F%E8%B7%AF&source=web_explore_feed"
+          }
         ]
       },
       {
@@ -562,7 +673,9 @@
             "note": "分店／地址待确认。此链接为城市内搜索，请先确认门店再导航。"
           }
         ],
-        "links": []
+        "links": [],
+        "references": [],
+        "xhsSearches": []
       },
       {
         "row": 74,
@@ -587,67 +700,110 @@
             "note": "核对地图结果的地址后，再点“到这去／导航”。"
           }
         ],
-        "links": []
+        "links": [],
+        "references": [],
+        "xhsSearches": [
+          {
+            "label": "上海 陆家嘴 迪士尼旗舰店",
+            "url": "https://www.xiaohongshu.com/search_result?keyword=%E4%B8%8A%E6%B5%B7%20%E9%99%86%E5%AE%B6%E5%98%B4%20%E8%BF%AA%E5%A3%AB%E5%B0%BC%E6%97%97%E8%88%B0%E5%BA%97&source=web_explore_feed"
+          }
+        ]
       },
       {
         "row": 76,
         "id": "d2-r76",
-        "time": "15:00-15:40",
-        "title": "陆家嘴",
+        "time": "15:00-16:00",
+        "title": "陆家嘴轻松散步与拍照",
         "type": "景点",
-        "desc": "东方明珠周边天桥→陆家嘴楼群机位→金茂外观，步行含拍照约40分钟，注意过街与人流。接着导航到【金茂君悦酒店】，就是陆家嘴经典机位，蹲下来开广角",
+        "desc": "迪士尼商店结束后，从东方明珠周边天桥慢行至陆家嘴滨江大道，边走边拍，约1小时。以江景、城市建筑外观和休息为主，按体力缩短步行。",
         "details": [
           {
-            "title": "📌 出行提醒",
+            "title": "🚶 轻松散步路线",
             "points": [
-              "按上方 Excel 时间与路线执行。表中未列的门票、预约和营业时间待确认；不将规划时段视为已预订时段。"
-            ]
-          }
-        ],
-        "highlights": [],
-        "locations": [
-          {
-            "name": "东方明珠",
-            "region": "上海",
-            "note": "核对地图结果的地址后，再点“到这去／导航”。"
-          },
-          {
-            "name": "金茂君悦大酒店",
-            "region": "上海",
-            "note": "酒店名称沿用 Excel；请与订单的地址、电话核对，勿直接选择同名分店。"
-          }
-        ],
-        "links": []
-      },
-      {
-        "row": 79,
-        "id": "d2-r79",
-        "time": "15:40-17:30",
-        "title": "上海中心大厦",
-        "type": "景点",
-        "desc": "15:40前到上海中心预约入口，安检／排队预留30-40分钟，16:20-17:15朵云书院，17:15开始下楼。【朵云书院52楼】保留阅读与高处观景体验；天气决定能见度。书院不是上海之巅观光层；不把购买饮品与日落视野视为保证。",
-        "details": [
-          {
-            "title": "🥢 餐饮与补充安排",
-            "points": [
-              "通过朵云书院官方公布的“佰朋”入口核实11/1预约，放号日期、时段及观景区消费规则待确认。原清单写法不一致，以官方为准。"
+              "迪士尼商店 → 东方明珠周边天桥 → 陆家嘴滨江大道。步行与过街合计预留20-30分钟，其余时间看江景、拍照和坐下休息，不强制逐个机位打卡。",
+              "雨天、风大或疲劳时直接进入附近商场休息；下午不再安排登高或需要预约入场的景点。"
             ]
           }
         ],
         "highlights": [
           {
-            "type": "预约",
-            "text": "规则及可选时段见攻略"
+            "type": "提醒",
+            "text": "轻松走，不赶机位"
           }
         ],
         "locations": [
           {
-            "name": "朵云书院 旗舰店 上海中心",
             "region": "上海",
-            "note": "核对地图结果的地址后，再点“到这去／导航”。"
+            "name": "东方明珠",
+            "note": "本段只看外观与天桥，不安排登塔。"
+          },
+          {
+            "region": "上海",
+            "name": "陆家嘴 滨江大道",
+            "note": "滨江大道范围较长，请核对自己所在位置；不要求走完全程。"
           }
         ],
-        "links": []
+        "links": [],
+        "references": [
+          {
+            "url": "https://www.xiaohongshu.com/explore/694f7704000000001e03b18c",
+            "title": "上海陆家嘴citywalk路线推荐🔥",
+            "kind": "公开索引原帖",
+            "note": "原帖地址来自公开参考页；小红书可能要求登录或在 App 内打开，当前可见性未实测。"
+          }
+        ],
+        "xhsSearches": [
+          {
+            "label": "上海 陆家嘴 滨江大道 散步",
+            "url": "https://www.xiaohongshu.com/search_result?keyword=%E4%B8%8A%E6%B5%B7%20%E9%99%86%E5%AE%B6%E5%98%B4%20%E6%BB%A8%E6%B1%9F%E5%A4%A7%E9%81%93%20%E6%95%A3%E6%AD%A5&source=web_explore_feed"
+          }
+        ]
+      },
+      {
+        "row": 79,
+        "id": "d2-coffee",
+        "time": "16:00-17:30",
+        "title": "陆家嘴咖啡厅休息",
+        "type": "餐饮",
+        "desc": "在陆家嘴滨江或正大广场附近找有5人座位的咖啡厅坐坐；16:00-17:15喝咖啡、休息，17:15-17:30洗手间、结账和集合，随后前往渡口。",
+        "details": [
+          {
+            "title": "☕ 咖啡与休息安排",
+            "points": [
+              "以就近、有座位和不用久等为优先，不为网红店跨区折返。咖啡厅尚未指定，门店、价格及营业时间待现场确认；饮品与点心按需点。",
+              "若散步提前结束，可提前坐下休息；若店内排队，换附近店，不压缩前往码头与候船时间。",
+              "17:30前离开咖啡厅。前往泰同栈渡口含叫车、车程和入口步行预留约30分钟，具体以所选咖啡厅位置及实时路况为准。"
+            ]
+          }
+        ],
+        "highlights": [
+          {
+            "type": "提醒",
+            "text": "咖啡厅就近选择；17:30前离开"
+          }
+        ],
+        "locations": [
+          {
+            "region": "上海",
+            "name": "正大广场 陆家嘴",
+            "note": "作为找咖啡厅的区域参考；未预订或指定具体店铺。"
+          }
+        ],
+        "links": [],
+        "references": [
+          {
+            "url": "https://www.xiaohongshu.com/explore/694f7704000000001e03b18c",
+            "title": "上海陆家嘴citywalk路线推荐🔥",
+            "kind": "公开索引原帖",
+            "note": "原帖地址来自公开参考页；小红书可能要求登录或在 App 内打开，当前可见性未实测。"
+          }
+        ],
+        "xhsSearches": [
+          {
+            "label": "上海 陆家嘴 咖啡厅",
+            "url": "https://www.xiaohongshu.com/search_result?keyword=%E4%B8%8A%E6%B5%B7%20%E9%99%86%E5%AE%B6%E5%98%B4%20%E5%92%96%E5%95%A1%E5%8E%85&source=web_explore_feed"
+          }
+        ]
       },
       {
         "row": 85,
@@ -655,7 +811,7 @@
         "time": "17:30-18:30",
         "title": "坐船欣赏江景",
         "type": "交通",
-        "desc": "17:30离开上海中心，叫车／步行至泰同栈渡口，目标18:00前到；候船和过江预留20-30分钟，乘泰公线到公平路。原2元票价保留为参考，末班与当天运营待确认。停航或赶不上则打车过江。",
+        "desc": "17:30前从陆家嘴咖啡厅出发，前往泰同栈渡口，含候车、交通及入口步行约30分钟，目标18:00前到；候船和过江预留20-30分钟，乘泰公线到公平路。原2元票价仅供参考，末班与当天运营待确认；停航或赶不上则打车过江。",
         "details": [
           {
             "title": "📌 出行提醒",
@@ -677,7 +833,21 @@
             "note": "核对地图结果的地址后，再点“到这去／导航”。"
           }
         ],
-        "links": []
+        "links": [],
+        "references": [
+          {
+            "url": "https://www.xiaohongshu.com/explore/69782ab4000000001a033b93",
+            "title": "上海北外滩！不绕路！快速直达攻略！（附路线）",
+            "kind": "公开索引原帖",
+            "note": "原帖地址来自公开参考页；小红书可能要求登录或在 App 内打开，当前可见性未实测。"
+          }
+        ],
+        "xhsSearches": [
+          {
+            "label": "上海 泰同栈 公平路 轮渡",
+            "url": "https://www.xiaohongshu.com/search_result?keyword=%E4%B8%8A%E6%B5%B7%20%E6%B3%B0%E5%90%8C%E6%A0%88%20%E5%85%AC%E5%B9%B3%E8%B7%AF%20%E8%BD%AE%E6%B8%A1&source=web_explore_feed"
+          }
+        ]
       },
       {
         "row": 88,
@@ -707,13 +877,27 @@
             "note": "酒店名称沿用 Excel；请与订单的地址、电话核对，勿直接选择同名分店。"
           }
         ],
-        "links": []
+        "links": [],
+        "references": [
+          {
+            "url": "https://www.xiaohongshu.com/explore/69782ab4000000001a033b93",
+            "title": "上海北外滩！不绕路！快速直达攻略！（附路线）",
+            "kind": "公开索引原帖",
+            "note": "原帖地址来自公开参考页；小红书可能要求登录或在 App 内打开，当前可见性未实测。"
+          }
+        ],
+        "xhsSearches": [
+          {
+            "label": "上海 北外滩",
+            "url": "https://www.xiaohongshu.com/search_result?keyword=%E4%B8%8A%E6%B5%B7%20%E5%8C%97%E5%A4%96%E6%BB%A9&source=web_explore_feed"
+          }
+        ]
       }
     ],
     "date": "11/01",
     "fullDate": "2026年11月01日 周日",
     "title": "11月1日 周日 ｜ Day 2 ｜ 上海时空漫游",
-    "route": "徐家汇 → 武康路 → 人和馆 → 陆家嘴 → 轮渡 → 北外滩",
+    "route": "徐家汇 → 武康路 → 人和馆 → 陆家嘴迪士尼商店 → 滨江散步／咖啡休息 → 轮渡 → 北外滩",
     "hotel": "汉庭酒店（上海南京东路步行街店）",
     "alert": ""
   },
@@ -760,7 +944,9 @@
             "note": "酒店名称沿用 Excel；请与订单的地址、电话核对，勿直接选择同名分店。"
           }
         ],
-        "links": []
+        "links": [],
+        "references": [],
+        "xhsSearches": []
       },
       {
         "row": 107,
@@ -803,7 +989,21 @@
             "note": "分店／地址待确认。此链接为城市内搜索，请先确认门店再导航。"
           }
         ],
-        "links": []
+        "links": [],
+        "references": [
+          {
+            "url": "https://www.xiaohongshu.com/explore/695dfc3b000000000903a966",
+            "title": "惠山古镇半日游||附赠游玩攻略",
+            "kind": "公开索引原帖",
+            "note": "原帖地址来自公开参考页；小红书可能要求登录或在 App 内打开，当前可见性未实测。"
+          }
+        ],
+        "xhsSearches": [
+          {
+            "label": "无锡 惠山古镇",
+            "url": "https://www.xiaohongshu.com/search_result?keyword=%E6%97%A0%E9%94%A1%20%E6%83%A0%E5%B1%B1%E5%8F%A4%E9%95%87&source=web_explore_feed"
+          }
+        ]
       },
       {
         "row": 119,
@@ -846,7 +1046,21 @@
             "note": "酒店名称沿用 Excel；请与订单的地址、电话核对，勿直接选择同名分店。"
           }
         ],
-        "links": []
+        "links": [],
+        "references": [
+          {
+            "url": "https://www.xiaohongshu.com/explore/695dfc3b000000000903a966",
+            "title": "惠山古镇半日游||附赠游玩攻略",
+            "kind": "公开索引原帖",
+            "note": "原帖地址来自公开参考页；小红书可能要求登录或在 App 内打开，当前可见性未实测。"
+          }
+        ],
+        "xhsSearches": [
+          {
+            "label": "无锡 寄畅园",
+            "url": "https://www.xiaohongshu.com/search_result?keyword=%E6%97%A0%E9%94%A1%20%E5%AF%84%E7%95%85%E5%9B%AD&source=web_explore_feed"
+          }
+        ]
       },
       {
         "row": 128,
@@ -888,7 +1102,21 @@
             "note": "酒店名称沿用 Excel；请与订单的地址、电话核对，勿直接选择同名分店。"
           }
         ],
-        "links": []
+        "links": [],
+        "references": [
+          {
+            "url": "https://www.xiaohongshu.com/explore/69623492000000000a03dfd8",
+            "title": "南长街city walk攻略｜跟着骄阳似我游无锡",
+            "kind": "公开索引原帖",
+            "note": "原帖地址来自公开参考页；小红书可能要求登录或在 App 内打开，当前可见性未实测。"
+          }
+        ],
+        "xhsSearches": [
+          {
+            "label": "无锡 南长街 清名桥",
+            "url": "https://www.xiaohongshu.com/search_result?keyword=%E6%97%A0%E9%94%A1%20%E5%8D%97%E9%95%BF%E8%A1%97%20%E6%B8%85%E5%90%8D%E6%A1%A5&source=web_explore_feed"
+          }
+        ]
       }
     ],
     "date": "11/02",
@@ -935,7 +1163,9 @@
             "note": "酒店名称沿用 Excel；请与订单的地址、电话核对，勿直接选择同名分店。"
           }
         ],
-        "links": []
+        "links": [],
+        "references": [],
+        "xhsSearches": []
       },
       {
         "row": 143,
@@ -978,7 +1208,21 @@
             "note": "核对地图结果的地址后，再点“到这去／导航”。"
           }
         ],
-        "links": []
+        "links": [],
+        "references": [
+          {
+            "url": "https://www.xiaohongshu.com/explore/6a6ee0930000000025016daf",
+            "title": "苏州📍一日游，保姆级不走回头路逛吃攻略",
+            "kind": "公开索引原帖",
+            "note": "原帖地址来自公开参考页；小红书可能要求登录或在 App 内打开，当前可见性未实测。"
+          }
+        ],
+        "xhsSearches": [
+          {
+            "label": "苏州 拙政园",
+            "url": "https://www.xiaohongshu.com/search_result?keyword=%E8%8B%8F%E5%B7%9E%20%E6%8B%99%E6%94%BF%E5%9B%AD&source=web_explore_feed"
+          }
+        ]
       },
       {
         "row": 155,
@@ -1008,7 +1252,14 @@
             "note": "分店／地址待确认。此链接为城市内搜索，请先确认门店再导航。"
           }
         ],
-        "links": []
+        "links": [],
+        "references": [],
+        "xhsSearches": [
+          {
+            "label": "苏州 松鹤楼 平江路",
+            "url": "https://www.xiaohongshu.com/search_result?keyword=%E8%8B%8F%E5%B7%9E%20%E6%9D%BE%E9%B9%A4%E6%A5%BC%20%E5%B9%B3%E6%B1%9F%E8%B7%AF&source=web_explore_feed"
+          }
+        ]
       },
       {
         "row": 159,
@@ -1051,7 +1302,21 @@
             "note": "核对地图结果的地址后，再点“到这去／导航”。"
           }
         ],
-        "links": []
+        "links": [],
+        "references": [
+          {
+            "url": "https://www.xiaohongshu.com/explore/6a8940dd00000000180192ef",
+            "title": "俯瞰姑苏｜藏在平江巷里的震撼",
+            "kind": "公开索引原帖",
+            "note": "原帖地址来自公开参考页；小红书可能要求登录或在 App 内打开，当前可见性未实测。"
+          }
+        ],
+        "xhsSearches": [
+          {
+            "label": "苏州 平江路 评弹",
+            "url": "https://www.xiaohongshu.com/search_result?keyword=%E8%8B%8F%E5%B7%9E%20%E5%B9%B3%E6%B1%9F%E8%B7%AF%20%E8%AF%84%E5%BC%B9&source=web_explore_feed"
+          }
+        ]
       },
       {
         "row": 167,
@@ -1088,7 +1353,21 @@
             "note": "分店／地址待确认。此链接为城市内搜索，请先确认门店再导航。"
           }
         ],
-        "links": []
+        "links": [],
+        "references": [
+          {
+            "url": "https://www.xiaohongshu.com/explore/695ddc0b000000002202f75e",
+            "title": "苏州5条必吃美食街🔥人均55吃到扶墙走！",
+            "kind": "公开索引原帖",
+            "note": "原帖地址来自公开参考页；小红书可能要求登录或在 App 内打开，当前可见性未实测。"
+          }
+        ],
+        "xhsSearches": [
+          {
+            "label": "苏州 七里山塘",
+            "url": "https://www.xiaohongshu.com/search_result?keyword=%E8%8B%8F%E5%B7%9E%20%E4%B8%83%E9%87%8C%E5%B1%B1%E5%A1%98&source=web_explore_feed"
+          }
+        ]
       },
       {
         "row": 173,
@@ -1123,7 +1402,21 @@
             "note": "酒店名称沿用 Excel；请与订单的地址、电话核对，勿直接选择同名分店。"
           }
         ],
-        "links": []
+        "links": [],
+        "references": [
+          {
+            "url": "https://www.xiaohongshu.com/explore/695ddc0b000000002202f75e",
+            "title": "苏州5条必吃美食街🔥人均55吃到扶墙走！",
+            "kind": "公开索引原帖",
+            "note": "原帖地址来自公开参考页；小红书可能要求登录或在 App 内打开，当前可见性未实测。"
+          }
+        ],
+        "xhsSearches": [
+          {
+            "label": "苏州 观前街",
+            "url": "https://www.xiaohongshu.com/search_result?keyword=%E8%8B%8F%E5%B7%9E%20%E8%A7%82%E5%89%8D%E8%A1%97&source=web_explore_feed"
+          }
+        ]
       }
     ],
     "date": "11/03",
@@ -1158,7 +1451,9 @@
             "note": "酒店名称沿用 Excel；请与订单的地址、电话核对，勿直接选择同名分店。"
           }
         ],
-        "links": []
+        "links": [],
+        "references": [],
+        "xhsSearches": []
       },
       {
         "row": 181,
@@ -1183,7 +1478,9 @@
             "note": "酒店名称沿用 Excel；请与订单的地址、电话核对，勿直接选择同名分店。"
           }
         ],
-        "links": []
+        "links": [],
+        "references": [],
+        "xhsSearches": []
       },
       {
         "row": 183,
@@ -1214,7 +1511,21 @@
             "note": "码头名称用于区域内搜索；具体入口、当日航段和上下船点须询现场工作人员。"
           }
         ],
-        "links": []
+        "links": [],
+        "references": [
+          {
+            "url": "https://www.xiaohongshu.com/explore/694cd6b3000000001e005367",
+            "title": "杭州西湖citywalk‼️懒人版不废腿（附攻略🔥",
+            "kind": "公开索引原帖",
+            "note": "原帖地址来自公开参考页；小红书可能要求登录或在 App 内打开，当前可见性未实测。"
+          }
+        ],
+        "xhsSearches": [
+          {
+            "label": "杭州 西湖 二公园码头 上岛游",
+            "url": "https://www.xiaohongshu.com/search_result?keyword=%E6%9D%AD%E5%B7%9E%20%E8%A5%BF%E6%B9%96%20%E4%BA%8C%E5%85%AC%E5%9B%AD%E7%A0%81%E5%A4%B4%20%E4%B8%8A%E5%B2%9B%E6%B8%B8&source=web_explore_feed"
+          }
+        ]
       },
       {
         "row": 186,
@@ -1250,7 +1561,21 @@
             "note": "核对地图结果的地址后，再点“到这去／导航”。"
           }
         ],
-        "links": []
+        "links": [],
+        "references": [
+          {
+            "url": "https://www.xiaohongshu.com/explore/694cd6b3000000001e005367",
+            "title": "杭州西湖citywalk‼️懒人版不废腿（附攻略🔥",
+            "kind": "公开索引原帖",
+            "note": "原帖地址来自公开参考页；小红书可能要求登录或在 App 内打开，当前可见性未实测。"
+          }
+        ],
+        "xhsSearches": [
+          {
+            "label": "杭州 西湖 三潭印月 游船",
+            "url": "https://www.xiaohongshu.com/search_result?keyword=%E6%9D%AD%E5%B7%9E%20%E8%A5%BF%E6%B9%96%20%E4%B8%89%E6%BD%AD%E5%8D%B0%E6%9C%88%20%E6%B8%B8%E8%88%B9&source=web_explore_feed"
+          }
+        ]
       },
       {
         "row": 189,
@@ -1280,7 +1605,21 @@
             "note": "核对地图结果的地址后，再点“到这去／导航”。"
           }
         ],
-        "links": []
+        "links": [],
+        "references": [
+          {
+            "url": "https://www.xiaohongshu.com/explore/694cd6b3000000001e005367",
+            "title": "杭州西湖citywalk‼️懒人版不废腿（附攻略🔥",
+            "kind": "公开索引原帖",
+            "note": "原帖地址来自公开参考页；小红书可能要求登录或在 App 内打开，当前可见性未实测。"
+          }
+        ],
+        "xhsSearches": [
+          {
+            "label": "杭州 三潭印月 小瀛洲",
+            "url": "https://www.xiaohongshu.com/search_result?keyword=%E6%9D%AD%E5%B7%9E%20%E4%B8%89%E6%BD%AD%E5%8D%B0%E6%9C%88%20%E5%B0%8F%E7%80%9B%E6%B4%B2&source=web_explore_feed"
+          }
+        ]
       },
       {
         "row": 192,
@@ -1307,6 +1646,26 @@
         ],
         "links": [
           "http://xhslink.com/o/9McQy9kAfKo"
+        ],
+        "references": [
+          {
+            "url": "http://xhslink.com/o/9McQy9kAfKo",
+            "title": "原参考 1",
+            "kind": "Excel 原有链接",
+            "note": "保留你的原参考帖子。"
+          },
+          {
+            "url": "https://www.xiaohongshu.com/explore/694cd6b3000000001e005367",
+            "title": "杭州西湖citywalk‼️懒人版不废腿（附攻略🔥",
+            "kind": "公开索引原帖",
+            "note": "原帖地址来自公开参考页；小红书可能要求登录或在 App 内打开，当前可见性未实测。"
+          }
+        ],
+        "xhsSearches": [
+          {
+            "label": "杭州 西湖 花港码头 离岛",
+            "url": "https://www.xiaohongshu.com/search_result?keyword=%E6%9D%AD%E5%B7%9E%20%E8%A5%BF%E6%B9%96%20%E8%8A%B1%E6%B8%AF%E7%A0%81%E5%A4%B4%20%E7%A6%BB%E5%B2%9B&source=web_explore_feed"
+          }
         ]
       },
       {
@@ -1339,6 +1698,30 @@
         ],
         "links": [
           "http://xhslink.com/o/9haN92DBr3Q"
+        ],
+        "references": [
+          {
+            "url": "http://xhslink.com/o/9haN92DBr3Q",
+            "title": "原参考 1",
+            "kind": "Excel 原有链接",
+            "note": "保留你的原参考帖子。"
+          },
+          {
+            "url": "https://www.xiaohongshu.com/explore/695931a8000000001e02ce6e",
+            "title": "新年第一站📍西湖沉浸式一日环湖线",
+            "kind": "公开索引原帖",
+            "note": "原帖地址来自公开参考页；小红书可能要求登录或在 App 内打开，当前可见性未实测。"
+          }
+        ],
+        "xhsSearches": [
+          {
+            "label": "杭州 花港观鱼",
+            "url": "https://www.xiaohongshu.com/search_result?keyword=%E6%9D%AD%E5%B7%9E%20%E8%8A%B1%E6%B8%AF%E8%A7%82%E9%B1%BC&source=web_explore_feed"
+          },
+          {
+            "label": "杭州 苏堤南端",
+            "url": "https://www.xiaohongshu.com/search_result?keyword=%E6%9D%AD%E5%B7%9E%20%E8%8B%8F%E5%A0%A4%E5%8D%97%E7%AB%AF&source=web_explore_feed"
+          }
         ]
       },
       {
@@ -1374,7 +1757,21 @@
             "note": "酒店名称沿用 Excel；请与订单的地址、电话核对，勿直接选择同名分店。"
           }
         ],
-        "links": []
+        "links": [],
+        "references": [
+          {
+            "url": "https://www.xiaohongshu.com/explore/695931a8000000001e02ce6e",
+            "title": "新年第一站📍西湖沉浸式一日环湖线",
+            "kind": "公开索引原帖",
+            "note": "原帖地址来自公开参考页；小红书可能要求登录或在 App 内打开，当前可见性未实测。"
+          }
+        ],
+        "xhsSearches": [
+          {
+            "label": "杭州 柳浪闻莺",
+            "url": "https://www.xiaohongshu.com/search_result?keyword=%E6%9D%AD%E5%B7%9E%20%E6%9F%B3%E6%B5%AA%E9%97%BB%E8%8E%BA&source=web_explore_feed"
+          }
+        ]
       },
       {
         "row": 202,
@@ -1423,7 +1820,21 @@
             "note": "酒店名称沿用 Excel；请与订单的地址、电话核对，勿直接选择同名分店。"
           }
         ],
-        "links": []
+        "links": [],
+        "references": [
+          {
+            "url": "https://www.xiaohongshu.com/explore/6911d8d60000000204020fb0",
+            "title": "杭州citywalk🍃市中心一日逛吃攻略‼️附路线",
+            "kind": "公开索引原帖",
+            "note": "原帖地址来自公开参考页；小红书可能要求登录或在 App 内打开，当前可见性未实测。"
+          }
+        ],
+        "xhsSearches": [
+          {
+            "label": "杭州 湖滨银泰in77",
+            "url": "https://www.xiaohongshu.com/search_result?keyword=%E6%9D%AD%E5%B7%9E%20%E6%B9%96%E6%BB%A8%E9%93%B6%E6%B3%B0in77&source=web_explore_feed"
+          }
+        ]
       }
     ],
     "date": "11/04",
@@ -1480,7 +1891,21 @@
             "note": "核对地图结果的地址后，再点“到这去／导航”。"
           }
         ],
-        "links": []
+        "links": [],
+        "references": [
+          {
+            "url": "https://www.xiaohongshu.com/explore/696b7b5b000000002200ae15",
+            "title": "杭州灵隐寺超详细攻略，附游览路线图",
+            "kind": "公开索引原帖",
+            "note": "原帖地址来自公开参考页；小红书可能要求登录或在 App 内打开，当前可见性未实测。"
+          }
+        ],
+        "xhsSearches": [
+          {
+            "label": "杭州 灵隐寺 飞来峰",
+            "url": "https://www.xiaohongshu.com/search_result?keyword=%E6%9D%AD%E5%B7%9E%20%E7%81%B5%E9%9A%90%E5%AF%BA%20%E9%A3%9E%E6%9D%A5%E5%B3%B0&source=web_explore_feed"
+          }
+        ]
       },
       {
         "row": 221,
@@ -1510,7 +1935,21 @@
             "note": "分店／地址待确认。此链接为城市内搜索，请先确认门店再导航。"
           }
         ],
-        "links": []
+        "links": [],
+        "references": [
+          {
+            "url": "https://www.xiaohongshu.com/explore/698f1b00000000001a01f2e1",
+            "title": "来杭州除了游西湖，可别错过运河citywalk",
+            "kind": "公开索引原帖",
+            "note": "原帖地址来自公开参考页；小红书可能要求登录或在 App 内打开，当前可见性未实测。"
+          }
+        ],
+        "xhsSearches": [
+          {
+            "label": "杭州 小河直街",
+            "url": "https://www.xiaohongshu.com/search_result?keyword=%E6%9D%AD%E5%B7%9E%20%E5%B0%8F%E6%B2%B3%E7%9B%B4%E8%A1%97&source=web_explore_feed"
+          }
+        ]
       },
       {
         "row": 226,
@@ -1552,7 +1991,21 @@
             "note": "核对地图结果的地址后，再点“到这去／导航”。"
           }
         ],
-        "links": []
+        "links": [],
+        "references": [
+          {
+            "url": "https://www.xiaohongshu.com/explore/69dce666000000001e00d669",
+            "title": "📍乌镇西栅 | 保姆级地图逛吃一日攻略",
+            "kind": "公开索引原帖",
+            "note": "原帖地址来自公开参考页；小红书可能要求登录或在 App 内打开，当前可见性未实测。"
+          }
+        ],
+        "xhsSearches": [
+          {
+            "label": "乌镇 西栅 入住 接驳",
+            "url": "https://www.xiaohongshu.com/search_result?keyword=%E4%B9%8C%E9%95%87%20%E8%A5%BF%E6%A0%85%20%E5%85%A5%E4%BD%8F%20%E6%8E%A5%E9%A9%B3&source=web_explore_feed"
+          }
+        ]
       },
       {
         "row": 236,
@@ -1593,7 +2046,21 @@
             "note": "码头名称用于区域内搜索；具体入口、当日航段和上下船点须询现场工作人员。"
           }
         ],
-        "links": []
+        "links": [],
+        "references": [
+          {
+            "url": "https://www.xiaohongshu.com/explore/69d1d181000000022101899a",
+            "title": "乌镇两天一晚攻略（经典省心版）",
+            "kind": "公开索引原帖",
+            "note": "原帖地址来自公开参考页；小红书可能要求登录或在 App 内打开，当前可见性未实测。"
+          }
+        ],
+        "xhsSearches": [
+          {
+            "label": "乌镇 西栅 摇橹船",
+            "url": "https://www.xiaohongshu.com/search_result?keyword=%E4%B9%8C%E9%95%87%20%E8%A5%BF%E6%A0%85%20%E6%91%87%E6%A9%B9%E8%88%B9&source=web_explore_feed"
+          }
+        ]
       },
       {
         "row": 241,
@@ -1640,7 +2107,21 @@
             "note": "核对地图结果的地址后，再点“到这去／导航”。"
           }
         ],
-        "links": []
+        "links": [],
+        "references": [
+          {
+            "url": "https://www.xiaohongshu.com/explore/6a084e6a000000003601d0ad",
+            "title": "乌镇西栅一日游攻略！附路线图和机位",
+            "kind": "公开索引原帖",
+            "note": "原帖地址来自公开参考页；小红书可能要求登录或在 App 内打开，当前可见性未实测。"
+          }
+        ],
+        "xhsSearches": [
+          {
+            "label": "乌镇 西栅 夜景 桥里桥",
+            "url": "https://www.xiaohongshu.com/search_result?keyword=%E4%B9%8C%E9%95%87%20%E8%A5%BF%E6%A0%85%20%E5%A4%9C%E6%99%AF%20%E6%A1%A5%E9%87%8C%E6%A1%A5&source=web_explore_feed"
+          }
+        ]
       }
     ],
     "date": "11/05",
@@ -1702,7 +2183,29 @@
             "note": "核对地图结果的地址后，再点“到这去／导航”。"
           }
         ],
-        "links": []
+        "links": [],
+        "references": [
+          {
+            "url": "https://www.xiaohongshu.com/explore/69dce666000000001e00d669",
+            "title": "📍乌镇西栅 | 保姆级地图逛吃一日攻略",
+            "kind": "公开索引原帖",
+            "note": "原帖地址来自公开参考页；小红书可能要求登录或在 App 内打开，当前可见性未实测。"
+          }
+        ],
+        "xhsSearches": [
+          {
+            "label": "乌镇 草木本色染坊",
+            "url": "https://www.xiaohongshu.com/search_result?keyword=%E4%B9%8C%E9%95%87%20%E8%8D%89%E6%9C%A8%E6%9C%AC%E8%89%B2%E6%9F%93%E5%9D%8A&source=web_explore_feed"
+          },
+          {
+            "label": "乌镇 叙昌酱园",
+            "url": "https://www.xiaohongshu.com/search_result?keyword=%E4%B9%8C%E9%95%87%20%E5%8F%99%E6%98%8C%E9%85%B1%E5%9B%AD&source=web_explore_feed"
+          },
+          {
+            "label": "乌镇 昭明书院",
+            "url": "https://www.xiaohongshu.com/search_result?keyword=%E4%B9%8C%E9%95%87%20%E6%98%AD%E6%98%8E%E4%B9%A6%E9%99%A2&source=web_explore_feed"
+          }
+        ]
       },
       {
         "row": 251,
@@ -1739,7 +2242,21 @@
             "note": "核对地图结果的地址后，再点“到这去／导航”。"
           }
         ],
-        "links": []
+        "links": [],
+        "references": [
+          {
+            "url": "https://www.xiaohongshu.com/explore/69dce666000000001e00d669",
+            "title": "📍乌镇西栅 | 保姆级地图逛吃一日攻略",
+            "kind": "公开索引原帖",
+            "note": "原帖地址来自公开参考页；小红书可能要求登录或在 App 内打开，当前可见性未实测。"
+          }
+        ],
+        "xhsSearches": [
+          {
+            "label": "乌镇 西栅 美食",
+            "url": "https://www.xiaohongshu.com/search_result?keyword=%E4%B9%8C%E9%95%87%20%E8%A5%BF%E6%A0%85%20%E7%BE%8E%E9%A3%9F&source=web_explore_feed"
+          }
+        ]
       },
       {
         "row": 255,
@@ -1786,7 +2303,21 @@
             "note": "核对地图结果的地址后，再点“到这去／导航”。"
           }
         ],
-        "links": []
+        "links": [],
+        "references": [
+          {
+            "url": "https://www.xiaohongshu.com/explore/6a9cf4220000000029019dbf",
+            "title": "【内地首次】张爱玲手稿遗物即将在乌镇展出",
+            "kind": "公开索引原帖",
+            "note": "原帖地址来自公开参考页；小红书可能要求登录或在 App 内打开，当前可见性未实测。"
+          }
+        ],
+        "xhsSearches": [
+          {
+            "label": "乌镇 木心美术馆",
+            "url": "https://www.xiaohongshu.com/search_result?keyword=%E4%B9%8C%E9%95%87%20%E6%9C%A8%E5%BF%83%E7%BE%8E%E6%9C%AF%E9%A6%86&source=web_explore_feed"
+          }
+        ]
       },
       {
         "row": 260,
@@ -1817,7 +2348,9 @@
             "note": "酒店名称沿用 Excel；请与订单的地址、电话核对，勿直接选择同名分店。"
           }
         ],
-        "links": []
+        "links": [],
+        "references": [],
+        "xhsSearches": []
       },
       {
         "row": 268,
@@ -1847,7 +2380,21 @@
             "note": "核对地图结果的地址后，再点“到这去／导航”。"
           }
         ],
-        "links": []
+        "links": [],
+        "references": [
+          {
+            "url": "http://xhslink.com/o/A4P5FfSR0Dm",
+            "title": "南京东路原参考",
+            "kind": "Excel 原有链接",
+            "note": "与 Day 1 同一街区的原参考。"
+          }
+        ],
+        "xhsSearches": [
+          {
+            "label": "上海 第一食品 南京东路",
+            "url": "https://www.xiaohongshu.com/search_result?keyword=%E4%B8%8A%E6%B5%B7%20%E7%AC%AC%E4%B8%80%E9%A3%9F%E5%93%81%20%E5%8D%97%E4%BA%AC%E4%B8%9C%E8%B7%AF&source=web_explore_feed"
+          }
+        ]
       },
       {
         "row": 270,
@@ -1888,7 +2435,9 @@
             "note": "酒店名称沿用 Excel；请与订单的地址、电话核对，勿直接选择同名分店。"
           }
         ],
-        "links": []
+        "links": [],
+        "references": [],
+        "xhsSearches": []
       }
     ],
     "date": "11/06",
@@ -1923,7 +2472,9 @@
             "note": "酒店名称沿用 Excel；请与订单的地址、电话核对，勿直接选择同名分店。"
           }
         ],
-        "links": []
+        "links": [],
+        "references": [],
+        "xhsSearches": []
       },
       {
         "row": 276,
@@ -1953,7 +2504,21 @@
             "note": "核对地图结果的地址后，再点“到这去／导航”。"
           }
         ],
-        "links": []
+        "links": [],
+        "references": [
+          {
+            "url": "http://xhslink.com/o/A4P5FfSR0Dm",
+            "title": "南京东路原参考",
+            "kind": "Excel 原有链接",
+            "note": "与 Day 1 同一街区的原参考。"
+          }
+        ],
+        "xhsSearches": [
+          {
+            "label": "上海 南京东路步行街",
+            "url": "https://www.xiaohongshu.com/search_result?keyword=%E4%B8%8A%E6%B5%B7%20%E5%8D%97%E4%BA%AC%E4%B8%9C%E8%B7%AF%E6%AD%A5%E8%A1%8C%E8%A1%97&source=web_explore_feed"
+          }
+        ]
       },
       {
         "row": 278,
@@ -1989,7 +2554,21 @@
             "note": "核对地图结果的地址后，再点“到这去／导航”。"
           }
         ],
-        "links": []
+        "links": [],
+        "references": [
+          {
+            "url": "https://www.xiaohongshu.com/explore/6a503539000000001700be22",
+            "title": "上博新展值得看吗？说说自己的观展感受！",
+            "kind": "公开索引原帖",
+            "note": "原帖地址来自公开参考页；小红书可能要求登录或在 App 内打开，当前可见性未实测。"
+          }
+        ],
+        "xhsSearches": [
+          {
+            "label": "上海博物馆 人民广场馆 美洲文明 世界树之巅",
+            "url": "https://www.xiaohongshu.com/search_result?keyword=%E4%B8%8A%E6%B5%B7%E5%8D%9A%E7%89%A9%E9%A6%86%20%E4%BA%BA%E6%B0%91%E5%B9%BF%E5%9C%BA%E9%A6%86%20%E7%BE%8E%E6%B4%B2%E6%96%87%E6%98%8E%20%E4%B8%96%E7%95%8C%E6%A0%91%E4%B9%8B%E5%B7%85&source=web_explore_feed"
+          }
+        ]
       },
       {
         "row": 284,
@@ -2014,7 +2593,14 @@
             "note": "核对地图结果的地址后，再点“到这去／导航”。"
           }
         ],
-        "links": []
+        "links": [],
+        "references": [],
+        "xhsSearches": [
+          {
+            "label": "星巴克臻选上海烘焙工坊 南京西路",
+            "url": "https://www.xiaohongshu.com/search_result?keyword=%E6%98%9F%E5%B7%B4%E5%85%8B%E8%87%BB%E9%80%89%E4%B8%8A%E6%B5%B7%E7%83%98%E7%84%99%E5%B7%A5%E5%9D%8A%20%E5%8D%97%E4%BA%AC%E8%A5%BF%E8%B7%AF&source=web_explore_feed"
+          }
+        ]
       },
       {
         "row": 287,
@@ -2056,7 +2642,14 @@
             "note": "核对地图结果的地址后，再点“到这去／导航”。"
           }
         ],
-        "links": []
+        "links": [],
+        "references": [],
+        "xhsSearches": [
+          {
+            "label": "上海 张园 石库门",
+            "url": "https://www.xiaohongshu.com/search_result?keyword=%E4%B8%8A%E6%B5%B7%20%E5%BC%A0%E5%9B%AD%20%E7%9F%B3%E5%BA%93%E9%97%A8&source=web_explore_feed"
+          }
+        ]
       },
       {
         "row": 294,
@@ -2098,7 +2691,21 @@
             "note": "核对地图结果的地址后，再点“到这去／导航”。"
           }
         ],
-        "links": []
+        "links": [],
+        "references": [
+          {
+            "url": "https://www.xiaohongshu.com/explore/6962193d000000001a026052",
+            "title": "上海思南路一日游Citywalk路线攻略🧱🏮🏠",
+            "kind": "公开索引原帖",
+            "note": "原帖地址来自公开参考页；小红书可能要求登录或在 App 内打开，当前可见性未实测。"
+          }
+        ],
+        "xhsSearches": [
+          {
+            "label": "上海 思南公馆",
+            "url": "https://www.xiaohongshu.com/search_result?keyword=%E4%B8%8A%E6%B5%B7%20%E6%80%9D%E5%8D%97%E5%85%AC%E9%A6%86&source=web_explore_feed"
+          }
+        ]
       },
       {
         "row": 301,
@@ -2123,7 +2730,21 @@
             "note": "核对地图结果的地址后，再点“到这去／导航”。"
           }
         ],
-        "links": []
+        "links": [],
+        "references": [
+          {
+            "url": "http://xhslink.com/o/A4P5FfSR0Dm",
+            "title": "南京东路原参考",
+            "kind": "Excel 原有链接",
+            "note": "与 Day 1 同一街区的原参考。"
+          }
+        ],
+        "xhsSearches": [
+          {
+            "label": "上海 南京东路步行街",
+            "url": "https://www.xiaohongshu.com/search_result?keyword=%E4%B8%8A%E6%B5%B7%20%E5%8D%97%E4%BA%AC%E4%B8%9C%E8%B7%AF%E6%AD%A5%E8%A1%8C%E8%A1%97&source=web_explore_feed"
+          }
+        ]
       },
       {
         "row": 305,
@@ -2148,7 +2769,9 @@
             "note": "酒店名称沿用 Excel；请与订单的地址、电话核对，勿直接选择同名分店。"
           }
         ],
-        "links": []
+        "links": [],
+        "references": [],
+        "xhsSearches": []
       },
       {
         "row": 311,
@@ -2178,7 +2801,9 @@
             "note": "T2沿用 Excel，出发前必须按实际航班确认航站楼。"
           }
         ],
-        "links": []
+        "links": [],
+        "references": [],
+        "xhsSearches": []
       }
     ],
     "date": "11/07",
@@ -2224,7 +2849,9 @@
             "note": "T2沿用 Excel，出发前必须按实际航班确认航站楼。"
           }
         ],
-        "links": []
+        "links": [],
+        "references": [],
+        "xhsSearches": []
       }
     ],
     "date": "11/08",
