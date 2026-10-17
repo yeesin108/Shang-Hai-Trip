@@ -2,382 +2,2242 @@
 <html lang="zh-CN">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="theme-color" content="#2d3a3a">
   <title>华东九日行｜随行卡</title>
-
-  <!-- Tailwind CSS & Alpine.js -->
+  <!-- 保持原有单文件、Tailwind CSS 与 Alpine.js 架构。需要联网加载 CDN。 -->
   <script src="https://cdn.tailwindcss.com"></script>
   <script defer src="https://cdn.jsdelivr.net/npm/@alpinejs/collapse@3.x.x/dist/cdn.min.js"></script>
   <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js"></script>
-
   <style>
-    body { background-color: #f6f5f0; color: #2c2c2c; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; }
-    .chinese-border { border: 1px solid #e2ded4; }
-    .tag-must-visit { background-color: #e6f4ea; color: #137333; }
-    .tag-must-eat { background-color: #fce8e6; color: #c5221f; }
-    .tag-reservation { background-color: #fef7e0; color: #b06000; }
-    .tag-buy { background-color: #f3e8fd; color: #7627bb; }
-    .no-scrollbar::-webkit-scrollbar { display: none; }
-    .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
+    body { background-color:#f6f5f0; color:#2c2c2c; font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif; }
+    .chinese-border { border:1px solid #e2ded4; }
+    .tag-must-visit { background-color:#e6f4ea; color:#137333; }
+    .tag-must-eat { background-color:#fce8e6; color:#c5221f; }
+    .tag-reservation { background-color:#fef7e0; color:#b06000; }
+    .tag-buy { background-color:#f3e8fd; color:#7627bb; }
+    .no-scrollbar::-webkit-scrollbar { display:none; }
+    .no-scrollbar { -ms-overflow-style:none; scrollbar-width:none; }
+    [x-cloak] { display:none!important; }
+    button,a { -webkit-tap-highlight-color:transparent; }
+    button:focus-visible,a:focus-visible { outline:2px solid #137333; outline-offset:3px; }
+    .text-wrap-safe { overflow-wrap:anywhere; }
+    @media (prefers-reduced-motion:reduce) { *,*::before,*::after { scroll-behavior:auto!important; transition-duration:0.01ms!important; animation-duration:0.01ms!important; } }
   </style>
 </head>
-<body class="pb-10">
-
-  <div x-data="appData()" class="max-w-md mx-auto min-h-screen flex flex-col">
-    
-    <!-- 顶部导航 -->
-    <header class="bg-[#2d3a3a] text-[#e8e4d9] p-4 sticky top-0 z-50 shadow-md flex justify-between items-center">
+<body class="pb-16">
+  <noscript><p style="padding:24px">请启用 JavaScript 以查看行程和使用展开功能。</p></noscript>
+  <p id="loading-note" style="padding:16px;font-size:12px">正在加载随行卡；若长时间未显示，请检查网络后刷新（页面需要加载 CDN）。</p>
+  <div x-data="appData()" x-init="document.getElementById('loading-note').hidden=true" x-cloak class="max-w-md mx-auto min-h-screen flex flex-col">
+    <header class="bg-[#2d3a3a] text-[#e8e4d9] p-4 sticky top-0 z-50 shadow-md flex justify-between items-center gap-2">
       <div>
         <h1 class="text-lg font-bold tracking-widest">华东九日游</h1>
-        <p class="text-[11px] text-gray-300">上海·无锡·苏州·乌镇·杭州</p>
+        <p class="text-[11px] text-gray-300">上海·无锡·苏州·杭州·乌镇</p>
+        <p class="text-[10px] text-gray-300 mt-1">2026.10.31—11.08 · 5人自由行</p>
       </div>
-      <div class="text-right">
-        <span class="text-[10px] border border-[#a39382] px-2 py-0.5 rounded text-[#e8e4d9]">✓快乐出行</span>
+      <div class="text-right shrink-0">
+        <span class="text-[10px] border border-[#a39382] px-2 py-0.5 rounded">✓快乐出行</span>
         <div class="text-[10px] text-emerald-400 mt-1">✓平安归来</div>
       </div>
     </header>
-
-    <main class="flex-1 p-4">
-      
-      <!-- 天数切换滑块 -->
-      <div class="flex overflow-x-auto space-x-2 pb-3 mb-3 border-b border-gray-300 no-scrollbar">
-        <template x-for="(day, index) in itinerary" :key="index">
-          <button @click="selectedDay = index" 
-                  :class="selectedDay === index ? 'bg-[#2d3a3a] text-white shadow' : 'bg-white text-gray-700 chinese-border'"
-                  class="px-3 py-1.5 rounded-lg text-xs font-medium whitespace-nowrap transition-all flex flex-col items-center">
-            <span class="font-bold text-sm" x-text="'D' + (index + 1)"></span>
-            <span class="text-[10px] opacity-80" x-text="day.date"></span>
+    <main class="flex-1 p-4 min-w-0">
+      <nav aria-label="选择旅行日期" class="flex overflow-x-auto space-x-2 pb-3 mb-3 border-b border-gray-300 no-scrollbar">
+        <template x-for="(day,index) in itinerary" :key="day.date">
+          <button type="button" @click="selectDay(index)" :aria-pressed="selectedDay===index" :aria-label="'Day '+(index+1)+' '+day.fullDate"
+            :class="selectedDay===index ? 'bg-[#2d3a3a] text-white shadow' : 'bg-white text-gray-700 chinese-border'"
+            class="day-tab px-3 py-1.5 rounded-lg text-xs font-medium whitespace-nowrap transition-all flex flex-col items-center min-h-[44px]">
+            <span class="font-bold text-sm" x-text="'D'+(index+1)"></span><span class="text-[10px] opacity-80" x-text="day.date"></span>
           </button>
         </template>
-      </div>
-
-      <!-- 每日概览 -->
+      </nav>
       <div class="bg-white rounded-xl p-3 mb-4 chinese-border shadow-sm border-l-4 border-l-[#2d3a3a]">
         <h2 class="font-bold text-base text-[#2d3a3a]" x-text="itinerary[selectedDay].title"></h2>
-        <p class="text-[11px] text-gray-500 mt-0.5" x-text="'动线：' + itinerary[selectedDay].route"></p>
+        <p class="text-[11px] text-gray-500 mt-1 leading-relaxed" x-text="'动线：'+itinerary[selectedDay].route"></p>
+        <p class="text-[11px] text-gray-600 mt-2 leading-relaxed" x-text="'住宿：'+itinerary[selectedDay].hotel"></p>
       </div>
-
-      <!-- 行程卡片列表 -->
+      <p x-show="itinerary[selectedDay].alert" x-text="itinerary[selectedDay].alert" role="note" class="text-xs leading-relaxed tag-reservation rounded-lg p-3 mb-4"></p>
       <div class="space-y-4">
-        <template x-for="item in itinerary[selectedDay].items" :key="item.time">
-          <div x-data="{ expanded: false }" class="bg-white rounded-xl p-4 chinese-border shadow-sm">
-            
-            <div class="flex justify-between items-center mb-2">
+        <!-- 每个跨日期唯一 id 对应独立展开状态；切换日期不会沿用其他卡片状态。 -->
+        <template x-for="item in itinerary[selectedDay].items" :key="item.id">
+          <article x-data="{expanded:false}" class="itinerary-card bg-white rounded-xl p-4 chinese-border shadow-sm min-w-0">
+            <div class="flex justify-between items-center gap-2 mb-2">
               <span class="text-xs font-mono bg-gray-100 text-gray-600 px-2 py-0.5 rounded" x-text="item.time"></span>
-              <span class="text-[11px] px-2 py-0.5 rounded font-medium" 
-                    :class="item.type === '景点' ? 'bg-emerald-50 text-emerald-700' : (item.type === '餐饮' ? 'bg-orange-50 text-orange-700' : 'bg-blue-50 text-blue-700')"
-                    x-text="item.type"></span>
+              <span class="text-[11px] px-2 py-0.5 rounded font-medium shrink-0" :class="item.type==='景点'?'bg-emerald-50 text-emerald-700':(item.type==='餐饮'?'bg-orange-50 text-orange-700':'bg-blue-50 text-blue-700')" x-text="item.type"></span>
             </div>
-
             <h3 class="font-bold text-gray-800 text-base mb-1" x-text="item.title"></h3>
-            <p class="text-xs text-gray-600 mb-3 leading-relaxed" x-text="item.desc"></p>
-
-            <!-- 亮点标签 -->
-            <div class="flex flex-wrap gap-1.5 mb-3" x-show="item.highlights && item.highlights.length > 0">
-              <template x-for="highlight in item.highlights" :key="highlight.text">
-                <span class="text-[10px] px-2 py-0.5 rounded-full font-medium"
-                      :class="getHighlightClass(highlight.type)"
-                      x-text="highlight.type + ': ' + highlight.text"></span>
+            <p class="text-xs text-gray-600 mb-3 leading-relaxed whitespace-pre-line text-wrap-safe" x-text="item.desc"></p>
+            <div class="flex flex-wrap gap-1.5 mb-3" x-show="item.highlights.length">
+              <template x-for="highlight in item.highlights" :key="highlight.text"><span class="text-[10px] px-2 py-0.5 rounded-full font-medium" :class="getHighlightClass(highlight.type)" x-text="highlight.type+': '+highlight.text"></span></template>
+            </div>
+            <div class="mb-2">
+              <button type="button" @click="expanded=!expanded" :aria-expanded="expanded" :aria-controls="'details-'+item.id" class="guide-toggle w-full text-left flex justify-between items-center bg-gray-50 py-2.5 px-3 rounded-lg text-[11px] text-[#2d3a3a] font-bold active:bg-gray-100 border border-gray-100 min-h-[44px]">
+                <span x-text="expanded?'收起深度攻略':'📖 展开详细攻略'"></span><span x-text="expanded?'▲':'▼'" class="text-[10px] text-gray-400" aria-hidden="true"></span>
+              </button>
+              <div x-show="expanded" x-collapse :id="'details-'+item.id" class="mt-3 guide-panel">
+                <template x-for="(detail,detailIndex) in item.details" :key="detailIndex">
+                  <section class="mb-4">
+                    <h4 class="text-[11px] font-bold text-gray-800 mb-2 border-l-2 border-[#2d3a3a] pl-2" x-text="detail.title"></h4>
+                    <ul class="space-y-1.5 text-[11px] text-gray-600 mb-2 pl-1">
+                      <template x-for="(point,pointIndex) in detail.points" :key="pointIndex"><li x-text="point" class="leading-relaxed bg-gray-50 p-2 rounded whitespace-pre-line text-wrap-safe"></li></template>
+                    </ul>
+                  </section>
+                </template>
+                <template x-if="item.links.length"><div class="mb-3 text-[11px] text-gray-500"><p>Excel 保留的原参考（非官方运营保证）：</p><template x-for="(link,linkIndex) in item.links" :key="link"><a :href="link" target="_blank" rel="noopener noreferrer" class="inline-block underline mr-3 py-2" x-text="'原参考 '+(linkIndex+1)"></a></template></div></template>
+              </div>
+            </div>
+            <div class="pt-2 border-t border-gray-100 mt-2 space-y-2">
+              <template x-for="place in item.locations" :key="place.region+place.name">
+                <div>
+                  <div class="flex justify-between gap-2 items-center">
+                    <span class="text-[10px] text-gray-500 flex-1 min-w-0 leading-relaxed" x-text="'📍 '+place.region+' · '+place.name"></span>
+                    <a :href="appMapUrl(place)" @click="openBaiduMap($event,place)" :aria-label="'百度地图：'+place.region+place.name" class="map-app text-[11px] text-[#2d3a3a] border border-[#2d3a3a] px-3 py-1.5 rounded-full flex items-center shrink-0 active:bg-gray-100 font-medium min-h-[40px]">🧭 百度地图</a>
+                  </div>
+                  <div class="text-right"><a :href="webMapUrl(place)" target="_blank" rel="noopener noreferrer" class="map-web text-[10px] underline text-gray-500 inline-block py-2" :aria-label="'网页版地图：'+place.name">打不开 App？网页版</a></div>
+                  <p class="text-[10px] text-gray-400 leading-relaxed" x-text="place.note"></p>
+                </div>
               </template>
             </div>
-
-            <!-- 深度攻略下拉面板 -->
-            <template x-if="item.details">
-              <div class="mb-2">
-                <button @click="expanded = !expanded" class="w-full text-left flex justify-between items-center bg-gray-50 py-2.5 px-3 rounded-lg text-[11px] text-[#2d3a3a] font-bold active:bg-gray-100 border border-gray-100">
-                  <span x-text="expanded ? '收起深度攻略' : '📖 展开保姆级走法与攻略'"></span>
-                  <span x-text="expanded ? '▲' : '▼'" class="text-[10px] text-gray-400"></span>
-                </button>
-                
-                <div x-show="expanded" x-collapse class="mt-3">
-                  <template x-for="detail in item.details" :key="detail.title">
-                    <div class="mb-4">
-                      <h4 class="text-[11px] font-bold text-gray-800 mb-2 border-l-2 border-[#2d3a3a] pl-2" x-text="detail.title"></h4>
-                      <ul class="space-y-1.5 text-[11px] text-gray-600 mb-2 pl-1">
-                        <template x-for="point in detail.points" :key="point">
-                          <li x-html="point" class="leading-relaxed bg-gray-50 p-2 rounded"></li>
-                        </template>
-                      </ul>
-                    </div>
-                  </template>
-                </div>
-              </div>
-            </template>
-
-            <!-- 百度地图唤醒按钮 -->
-            <template x-if="item.location">
-              <div class="pt-3 border-t border-gray-100 flex justify-between items-center mt-2">
-                <span class="text-[10px] text-gray-400 truncate max-w-[160px] font-mono" x-text="'📍 ' + item.location"></span>
-                <button @click="openBaiduMap(item.location)" class="text-[11px] text-[#2d3a3a] border border-[#2d3a3a] px-3 py-1.5 rounded-full flex items-center gap-1 active:bg-gray-100 font-medium transition-colors">
-                  🧭 百度打车/导航
-                </button>
-              </div>
-            </template>
-
-          </div>
+          </article>
         </template>
       </div>
-
+      <footer class="mt-6 text-[11px] text-gray-500 leading-relaxed space-y-2">
+        <p>行程依据：华东自由行_优化版.xlsx。保留表内条件安排、预算及待确认事项；车程为规划估算。</p>
+        <p>地图使用：手机点击“百度地图”尝试打开 App，首次可能需要允许浏览器打开百度地图。未成功时点击网页版。请核对搜索结果的地址，再选择“到这去／导航”；微信等内置浏览器可尝试在系统浏览器打开。</p>
+        <p>Excel 未提供已核实的地点坐标／POI 编号，因此使用城市＋地点名称搜索，不虚构精确坐标。未确定分店、民宿及码头入口须先确认。App 跳转受设备、安装状态和浏览器限制，不能保证自动成功。</p>
+      </footer>
     </main>
-
+    <div x-show="mapMessage" x-cloak role="status" aria-live="polite" class="fixed bottom-16 left-4 right-4 max-w-md mx-auto bg-[#2d3a3a] text-white text-xs p-3 rounded-xl shadow-lg z-50">
+      <p x-text="mapMessage" class="leading-relaxed"></p>
+      <div class="flex justify-between items-center mt-2"><a :href="lastMapUrl" target="_blank" rel="noopener noreferrer" class="underline py-2">打开该地点网页版</a><button type="button" @click="mapMessage=''" class="px-3 py-2">关闭提示</button></div>
+    </div>
+    <button type="button" @click="backToTop()" aria-label="返回顶部" class="fixed bottom-4 left-1/2 -translate-x-1/2 w-11 h-11 rounded-full bg-white text-gray-500 shadow-md border border-gray-100 text-xl z-40">⌃</button>
   </div>
-
   <script>
+    'use strict';
+    // All itinerary content below comes from the optimized first worksheet.
+    // Official map API: https://lbsyun.baidu.com/docs/webapi?title=mapadjustment/uri/web
+    // https://lbsyun.baidu.com/docs/webapi?title=mapadjustment/uri/ios
+    // No API key or coordinates are required for URI keyword search.
     function appData() {
+      let pendingTimer=null;
+      let messageTimer=null;
+      let stopWatching=null;
       return {
-        selectedDay: 0,
-
-        openBaiduMap(location) {
-          window.location.href = 'baidumap://map/place/search?query=' + encodeURIComponent(location);
+        selectedDay:0,
+        mapMessage:'',
+        lastMapUrl:'',
+        selectDay(index) {
+          this.selectedDay=index;
+          this.$nextTick(()=>{
+            const tab=this.$root.querySelectorAll('.day-tab')[index];
+            if(tab) tab.scrollIntoView({block:'nearest',inline:'nearest'});
+          });
         },
-
+        backToTop() { window.scrollTo({top:0,behavior:window.matchMedia('(prefers-reduced-motion: reduce)').matches?'auto':'smooth'}); },
+        mapParams(place,platform) {
+          return 'query='+encodeURIComponent(place.region+' '+place.name)+'&region='+encodeURIComponent(place.region)+'&src='+encodeURIComponent(platform+'.huadong.travelcard');
+        },
+        webMapUrl(place) { return 'https://api.map.baidu.com/place/search?'+this.mapParams(place,'webapp')+'&output=html'; },
+        appMapUrl(place) {
+          const isiOS=/iPad|iPhone|iPod/.test(navigator.userAgent)||(navigator.platform==='MacIntel'&&navigator.maxTouchPoints>1);
+          return 'baidumap://map/place/search?'+this.mapParams(place,isiOS?'ios':'andr');
+        },
+        openBaiduMap(event,place) {
+          // Keep native modifier-key behaviour. Explicit HTTPS fallback is always visible.
+          if(event.ctrlKey||event.metaKey||event.shiftKey||event.altKey) return;
+          event.preventDefault();
+          if(stopWatching) stopWatching();
+          clearTimeout(messageTimer);
+          this.lastMapUrl=this.webMapUrl(place);
+          const mobile=/Android|iPhone|iPad|iPod/i.test(navigator.userAgent)||(navigator.platform==='MacIntel'&&navigator.maxTouchPoints>1);
+          if(!mobile) { window.open(this.lastMapUrl,'_blank','noopener,noreferrer');return; }
+          this.mapMessage='正在尝试打开百度地图。如有系统提示，请选择允许；未打开可使用下方网页版。';
+          let departed=false;
+          const cleanup=()=>{
+            clearTimeout(pendingTimer);
+            document.removeEventListener('visibilitychange',onVisibility);
+            window.removeEventListener('pagehide',onLeave);
+            stopWatching=null;
+          };
+          const onLeave=()=>{departed=true;cleanup();this.mapMessage='';};
+          const onVisibility=()=>{if(document.visibilityState==='hidden') onLeave();};
+          stopWatching=cleanup;
+          document.addEventListener('visibilitychange',onVisibility);
+          window.addEventListener('pagehide',onLeave);
+          // Same user gesture initiates URI. Do not blindly auto-redirect after a timer:
+          // browser permission dialogs can delay visibility events even if app opening succeeds.
+          pendingTimer=setTimeout(()=>{
+            cleanup();
+            if(!departed&&document.visibilityState==='visible') this.mapMessage='若百度地图未打开，请点击“打开该地点网页版”。系统无法可靠判断是否已安装 App。';
+          },2200);
+          try { window.location.href=this.appMapUrl(place); }
+          catch(error) { cleanup();this.mapMessage='当前浏览器未能打开 App，请使用该地点网页版。'; }
+          messageTimer=setTimeout(()=>{this.mapMessage='';},15000);
+        },
+        destroy() {if(stopWatching) stopWatching();clearTimeout(messageTimer);},
         getHighlightClass(type) {
-          if (type === '必游' || type === '必逛') return 'tag-must-visit';
-          if (type === '必吃' || type === '必点') return 'tag-must-eat';
-          if (type === '预约' || type === '提醒' || type === '硬性') return 'tag-reservation';
-          if (type === '必买') return 'tag-buy';
+          if(type==='必游'||type==='必逛')return 'tag-must-visit';
+          if(type==='必吃'||type==='必点')return 'tag-must-eat';
+          if(type==='预约'||type==='提醒'||type==='硬性')return 'tag-reservation';
+          if(type==='必买')return 'tag-buy';
           return 'bg-gray-100 text-gray-600';
         },
-        
-        // 全量行程数据 (极简无图版)
         itinerary: [
+  {
+    "items": [
+      {
+        "row": 3,
+        "id": "d1-r3",
+        "time": "01:05-04:45",
+        "title": "机场接机与入住",
+        "type": "交通",
+        "desc": "01:05抵达浦东（原航班时间保留）。入境、取行李及找司机预留90-120分钟，车程另计60-90分钟；规划03:30-04:45到酒店，延误时顺延。",
+        "details": [
           {
-            date: '10/31', title: 'Day 1: 上海初印象', route: '飞机降落 ➔ 南京东路 ➔ 豫园 ➔ 外滩夜游 ➔ 步行回酒店',
-            items: [
-              { time: '19:35-01:05', type: '交通', title: '✈️ 航班飞往上海', desc: '【注意】19:35 起飞时间是 10月30日 的时间。全家搭乘晚间航班，前往上海。', location: '上海浦东国际机场', highlights: [], details: null },
-              { time: '01:05-03:30', type: '交通', title: '机场接机与入住', desc: '到达浦东机场。提前预订的9座商务包车在机场等候，送达酒店办理入住。', location: '汉庭酒店(上海南京东路步行街店)', highlights: [{type: '提醒', text: '办理入住补眠'}], details: null },
-              { time: '10:00-13:15', type: '景点', title: '南京东路步行街 (含午餐)', desc: '酒店出门即是南京东路，沿街往西逛。2.5小时主攻西段，随后在附近午餐。', location: '上海南京东路步行街', highlights: [{type: '必逛', text: '百年建筑/世贸广场'}, {type: '必吃', text: '莱莱小笼/鲜得来'}],
-                details: [{ 
-                  title: '🛍️ 大众点评/小红书 必买必吃精选：', 
-                  points: [
-                    '<b>必逛地标：</b>永安百货等百年建筑（保留老上海风貌），和平饭店大堂（免费参观），世贸广场（内有乐高旗舰店和M&M巧克力世界）。',
-                    '<b>🎁 必买伴手礼：</b>',
-                    '📍 第一食品商店：一站式买齐蝴蝶酥、大白兔奶糖。',
-                    '📍 沈大成：买青团、条头糕、双酿团。泰康食品：必吃鲜肉月饼和蝴蝶酥。',
-                    '📍 国际饭店西饼屋：奶香酥脆的蝴蝶酥（可能需排队）。邵万生：以“糟货”闻名。',
-                    '📍 上海女人雪花膏：怀旧伴手礼，南京路有授权店。',
-                    '<b>🥢 午餐推荐：</b>',
-                    '正餐：【御延公馆】（红烧肉）、【新雅粤菜馆】（老字号）、【燕云楼】（烤鸭）。',
-                    '小吃：【莱莱小笼】（本地人私藏的蟹粉小笼）、【鲜得来】（排骨年糕外酥里嫩）、【东泰祥】（生煎）、【味香斋】（米其林麻酱拌面）。'
-                  ]
-                }]
-              },
-              { time: '13:15-13:30', type: '交通', title: '打车前往豫园', desc: '从南京路结束点打车至豫园（车费约15—25元）。坚决不坐地铁。', location: '上海豫园', highlights: [{type: '硬性', text: '本行程不坐地铁'}], details: null },
-              { time: '13:30-18:00', type: '景点', title: '豫园与城隍庙 (含晚餐)', desc: '游园林、逛商城、看九曲桥，晚餐认准老字号。', location: '上海豫园', highlights: [{type: '预约', text: '门票需分别购买'}, {type: '必吃', text: '南翔小笼/绿波廊'}],
-                details: [{ 
-                  title: '🗺️ 园内深度打卡与避坑：', 
-                  points: [
-                    '<b>大假山：</b>江南现存最大的明代黄石假山，高约14米，可登顶俯瞰全园。', 
-                    '<b>仰山堂、卷雨楼：</b>欣赏大假山和池景的最佳位置。', 
-                    '<b>玉华堂：</b>园主潘允端书斋，堂前“玉玲珑”为江南三大名石之一。', 
-                    '<b>点春堂：</b>曾是上海小刀会起义指挥部。',
-                    '<b>九曲桥与湖心亭：</b>虽然桥在园外，但从园内望去是经典画面。',
-                    '<b>上海城隍庙：</b>游玩策略：从豫园出来步行至城隍庙（约30分钟）。即使不信教也值得进去感受香火缭绕的道教氛围，抬头细看八卦藻井。',
-                    '<b>🥢 必吃推荐：</b>【绿波廊】、【上海老饭店】、【南翔馒头店】（建议上二楼堂食）、【大壶春】。',
-                    '<b>⚠️ 避坑提醒：</b>主街高价小吃（如35元的蟹黄汤包）性价比不高，认准老字号！九曲桥晚上人流量大，注意保管财物。'
-                  ]
-                }]
-              },
-              { time: '18:00-18:20', type: '交通', title: '打车前往外滩', desc: '目的地设为“中山东一路南京东路口”或“外滩观景台附近”。外滩管制严可能需提前下车步行。', location: '外滩观景台', highlights: [{type: '提醒', text: '若堵车提前下车'}], details: null },
-              { time: '18:30-21:00', type: '景点', title: '外滩夜游 (蓝调时刻)', desc: '18:30前抵达观景台。沿万国建筑群往北走到外白渡桥。', location: '外滩海关大楼', highlights: [{type: '必游', text: '陆家嘴全景机位'}],
-                details: [{ 
-                  title: '📌 外滩保姆级夜游攻略 (全步行实测)', 
-                  points: [
-                    '<b>最佳拍照时间：</b>19:00—21:30，灯光全开，蓝调时刻氛围感拉满。',
-                    '<b>🗺 经典游玩路线：</b>',
-                    '• <b>海关大楼 ➔ 外滩观景台</b> (90m | 约2分钟)：整点敲响《东方红》钟声；全景解锁“陆家嘴三件套”。',
-                    '• <b>外滩观景台 ➔ 和平饭店</b> (279m | 约5分钟)：南京东路最美转角，复古高级感封神。',
-                    '• <b>和平饭店 ➔ 格林邮船</b> (281m | 约4分钟)：侧拍东方明珠的宝藏角度。',
-                    '• <b>格林邮船 ➔ 外白渡桥</b> (273m | 约4分钟)：利用钢结构桥洞进行框架构图。',
-                    '• <b>外白渡桥 ➔ 新天安堂</b> (191m | 约3分钟)：哥特式教堂建筑，小众安静复古。',
-                    '• <b>新天安堂 ➔ 南京东路步行街</b> (约300m | 约5分钟)：背对黄浦江拍摄万国建筑，折返南京路。'
-                  ]
-                }]
-              },
-              { time: '21:00-21:15', type: '交通', title: '步行回汉庭酒店', desc: '从外滩观景台沿南京东路步行街往西走，全程约650米，步行8分钟。不坐地铁。', location: '汉庭酒店(上海南京东路步行街店)', highlights: [{type: '硬性', text: '纯步行回酒店'}],
-                details: [{ 
-                  title: '🚶 回程路线详情：', 
-                  points: [
-                    '沿途经过和平饭店、南京东路河南中路口，继续直行至河南中路505号（南京东路北侧50米），即可到达汉庭酒店。'
-                  ]
-                }]
-              }
+            "title": "🗺️ 游览路线、交通与拍照",
+            "points": [
+              "【跨城包车】 提早预订的9座商务包车在机场等候，送达【汉庭酒店（上海南京东路步行街店）】。"
             ]
           },
           {
-            date: '11/01', title: 'Day 2: 【上海】梧桐区、陆家嘴、北外滩', route: '徐家汇 ➔ 武康大楼 ➔ 迪士尼商店 ➔ 上海中心 ➔ 轮渡 ➔ 北外滩夜景',
-            items: [
-              { time: '09:00-10:00', type: '景点', title: '徐家汇大教堂', desc: '感受经典哥特式建筑的庄严与美感。', location: '徐家汇天主堂', highlights: [], details: null },
-              { time: '10:00-10:30', type: '景点', title: '徐家汇书院', desc: '打卡网红图书馆与文创空间。', location: '徐家汇书院', highlights: [], details: null },
-              { time: '10:30-12:30', type: '景点', title: '法租界梧桐区漫步', desc: '在浪漫的梧桐树下散步，感受老上海风情。', location: '上海法租界', highlights: [], details: null },
-              { time: '12:30-14:00', type: '餐饮', title: '午餐：人和馆', desc: '【硬性要求】吃蟹粉捞饭。必须在上午10:00-10:30左右通过“大众点评”APP提前线上取号，随时关注叫号进度。', location: '人和馆', highlights: [{type: '硬性', text: '上午10点提前取号'}], details: null },
-              { time: '14:00-15:00', type: '景点', title: '迪士尼商店 (陆家嘴)', desc: '打车或地铁1/2号口方向出站后，顺路先去东方明珠环形天桥旁的迪士尼商店逛逛。', location: '陆家嘴迪士尼旗舰店', highlights: [], details: null },
-              { time: '15:00-16:00', type: '景点', title: '陆家嘴三件套机位', desc: '沿天桥向南步行，打卡各种出圈仰拍机位。', location: '陆家嘴', highlights: [{type: '必拍', text: '广角仰拍'}],
-                details: [{ 
-                  title: '📸 拍摄机位指南：', 
-                  points: [
-                    '沿天桥向南步行，打卡陆家嘴地铁站6号口扶梯和金茂广角机位。',
-                    '旁边就是很火的“扶梯三件套”机位和东方明珠。',
-                    '接着导航到【金茂君悦酒店】，这是陆家嘴经典机位，蹲下来开广角仰拍。'
-                  ]
-                }]
-              },
-              { time: '16:00-17:30', type: '景点', title: '上海中心大厦 (朵云书院)', desc: '52楼高空看陆家嘴全景日落 (约17:00日落)。必须提前微信小程序“佰朋”预约。', location: '上海中心大厦 朵云书院', highlights: [{type: '预约', text: '佰朋小程序预约'}, {type: '提醒', text: '预留排队时间'}],
-                details: [{ 
-                  title: '🌆 登高攻略与预警：', 
-                  points: [
-                    '搭乘超高速电梯直达52楼的【朵云书院】，买杯咖啡就可以俯瞰陆家嘴全景。',
-                    '<b>【排队预警】</b>节假日上楼电梯需排队20-30分钟，买咖啡进入观景座区还需二次排队，请把控好时间。'
-                  ]
-                }]
-              },
-              { time: '17:30-20:00', type: '景点', title: '江上轮渡与北外滩', desc: '从上海中心出来，打车去【泰同栈渡口】。', location: '公平路渡口', highlights: [{type: '必游', text: '2元夜景轮渡'}],
-                details: [{ 
-                  title: '⛴️ 轮渡与返回动线：', 
-                  points: [
-                    '花2元乘坐轮渡到【公平路渡口】，在江上欣赏两岸夜景。',
-                    '抵达对岸后，沿北外滩散步。',
-                    '散步结束后，呼叫滴滴6座商务车返回【汉庭酒店（上海南京东路店）】。晚餐待定。'
-                  ]
-                }]
-              }
+            "title": "🥢 餐饮与补充安排",
+            "points": [
+              "早餐：自理（机上或酒店补眠）"
             ]
           },
           {
-            date: '11/02', title: 'Day 3: 无锡运河夜色', route: '全季酒店 ➔ 惠山古镇 ➔ 南长街',
-            items: [
-              { time: '08:30-10:30', type: '交通', title: '跨城包车往无锡', desc: '乘包车前往无锡，抵达全季酒店南长街店，必须先寄存5大行李。', location: '全季酒店无锡南长街店', highlights: [{type: '硬性', text: '前台寄存大行李'}], details: null },
-              { time: '14:00-16:30', type: '景点', title: '惠山古镇与寄畅园', desc: '探访江南古典园林最高杰作与无锡泥人。', location: '无锡寄畅园', highlights: [{type: '必游', text: '寄畅园借景'}],
-                details: [{ 
-                  title: '🗺️ 古镇必经动线：', 
-                  points: [
-                    '<b>起点：</b>东北门进入。途经打卡无锡泥人、宝善桥（极佳取景位）。', 
-                    '<b>核心区：</b>进入【寄畅园】。乾隆皇帝六下江南赞不绝口的园林。感受“借锡山塔影入园”的精妙手法。'
-                  ]
-                }]
-              },
-              { time: '17:30-20:30', type: '景点', title: '清名桥古运河 (南长街)', desc: '京杭大运河畔典型水弄堂格局，夜游并享用晚餐。', location: '无锡南长街', highlights: [{type: '必吃', text: '太湖三白、无锡排骨'}],
-                details: [{ 
-                  title: '🏮 夜游动线：', 
-                  points: ['傍晚跨越标志性的【清名桥】，两岸红灯笼亮起。晚饭直接在南长街本帮菜馆吃。']
-                }]
-              }
-            ]
-          },
-          {
-            date: '11/03', title: 'Day 4: 苏州水乡', route: '安逸酒店（苏州观前街平江路店）➔ 拙政园 ➔ 狮子林 ➔ 平江路 ➔ 山塘街',
-            items: [
-              { time: '10:30-12:30', type: '景点', title: '拙政园与狮子林', desc: '中国四大名园之一，世界文化遗产。', location: '苏州拙政园', highlights: [{type: '预约', text: '提前14天抢门票'}],
-                details: [{ 
-                  title: '🚶‍♂️ 园林走法：', 
-                  points: [
-                    '<b>拙政园：</b>必须走到【小飞虹】，这是江南唯一的园林廊桥。', 
-                    '<b>狮子林：</b>穿梭在奇石叠起的假山迷宫中，体会透漏瘦的造园艺术。'
-                  ]
-                }]
-              },
-              { time: '12:30-17:00', type: '景点', title: '平江路历史街区 (含午餐)', desc: '宋代《平江图》“水陆并行”格局。午餐在【松鹤楼】吃苏帮菜。', location: '苏州平江路', highlights: [{type: '必游', text: '听地道苏州评弹'}, {type: '必吃', text: '松鹤楼本帮菜'}],
-                details: [{ 
-                  title: '🍵 听曲与漫步：', 
-                  points: ['进入平江路，穿梭小桥流水人家。找一家茶馆，5个人坐下来点壶茶，听一曲地道的吴侬软语【苏州评弹】。']
-                }]
-              },
-              { time: '17:30-20:00', type: '景点', title: '七里山塘街夜游', desc: '体验短途山塘街摇橹船。', location: '苏州七里山塘景区', highlights: [{type: '必吃', text: '苏式焖肉面'}],
-                details: [{ 
-                  title: '🛶 游船夜景动线：', 
-                  points: ['晚间红灯笼亮起时，宛如现实版《千与千寻》。沿河观赏粉墙黛瓦，体验一次短途【山塘街摇橹船】。']
-                }]
-              }
-            ]
-          },
-          {
-            date: '11/04', title: 'Day 5: 杭州西湖一日游', route: '杭州西湖东坡酒店 ➔ 西湖 ➔ 湖滨商圈',
-            items: [
-              { time: '09:00-11:00', type: '交通', title: '跨城直达杭州', desc: '预订的9座商务包车，从苏州酒店直达【杭州西湖东坡酒店】（车程约2小时）。', location: '杭州西湖东坡酒店', highlights: [{type: '提醒', text: '需提前准备明早早餐'}], details: null },
-              { time: '11:30-13:00', type: '餐饮', title: '午餐', desc: '在酒店附近吃午餐。', location: '杭州西湖', highlights: [], details: null },
-              { time: '14:00-17:30', type: '景点', title: '游览西湖与下午茶', desc: '从酒店/午餐地，导航至【柳浪闻莺】（1.4km, 6min) 开始游西湖。', location: '杭州柳浪闻莺', highlights: [{type: '必点', text: '西湖龙井'}],
-                details: [{ 
-                  title: '🍵 西湖休闲动线：', 
-                  points: ['漫步柳浪闻莺，随后在西湖边找茶室，品味正宗的西湖龙井下午茶。']
-                }]
-              },
-              { time: '18:30-21:30', type: '景点', title: '湖滨夜景与杭州酒家', desc: '从西湖出口呼叫滴滴6座商务车至餐厅，饭后在湖滨区域全步行返回酒店。', location: '杭州酒家(延安路总店)', highlights: [{type: '必点', text: '杭帮名菜'}],
-                details: [{
-                  title: '🚶‍♀️ 晚餐与散步：',
-                  points: [
-                    '晚餐在【杭州酒家（延安路总店）】享用。',
-                    '饭后在湖滨商圈看夜景，全步行返回【杭州西湖东坡酒店】。'
-                  ]
-                }]
-              }
-            ]
-          },
-          {
-            date: '11/05', title: 'Day 6: 杭州灵隐寺&乌镇', route: '杭州灵隐寺 ➔ 小河直街 ➔ 乌镇',
-            items: [
-              { time: '07:30-12:00', type: '景点', title: '包车前往灵隐寺与飞来峰', desc: '今日全天包车，一大早出门（需食用Day 5提前备好的早餐）。', location: '杭州灵隐寺', highlights: [{type: '提醒', text: '早起避堵'}], details: null },
-              { time: '12:30-15:00', type: '景点', title: '小河直街与午餐', desc: '从灵隐寺前往小河直街（9.7km, 26min）。看风景，逛街，吃午餐。', location: '杭州小河直街', highlights: [{type: '必吃', text: '溪湖院子里老店'}],
-                details: [{
-                  title: '🥢 午餐安排：',
-                  points: ['在充满市井风情的历史街区逛街，午餐选在【溪湖院子里老店】。']
-                }]
-              },
-              { time: '15:30-17:00', type: '交通', title: '包车前往乌镇', desc: '随跨城包车从龙井村直接驱车前往浙江桐乡乌镇（车程约1.5小时，77km）。', location: '乌镇西栅', highlights: [], details: null },
-              { time: '17:00之后', type: '景点', title: '参观乌镇西栅景区', desc: '办理入住【乌镇民宿】，开启夜游水乡。', location: '乌镇西栅景区', highlights: [{type: '硬性', text: '预定明早7点早餐'}],
-                details: [{
-                  title: '🛎️ 入住重要提醒：',
-                  points: ['在办理入住时，【必须提前预定好】隔天早上 07:00 的水乡早茶客/早餐！']
-                }]
-              }
-            ]
-          },
-          {
-            date: '11/06', title: 'Day 7: 乌镇晨游与返上海', route: '乌镇西栅 ➔ 返回上海 ➔ 南京路',
-            items: [
-              { time: '07:00-08:00', type: '餐饮', title: '水乡早餐', desc: '享用昨晚提前预定好的乌镇民宿早餐。', location: '乌镇西栅', highlights: [], details: null },
-              { time: '08:00-10:00', type: '景点', title: '乌镇西栅继续逛', desc: '清晨游览文化打卡点，享受水乡悠闲收尾。', location: '木心美术馆', highlights: [{type: '必吃', text: '定胜糕与咖啡'}],
-                details: [{
-                  title: '📸 晨游文艺动线：',
-                  points: [
-                    '游览【木心美术馆】、【草木本色染坊】（看蓝印花布）、【昭明书院】。',
-                    '或者找一家临河茶馆，品尝定胜糕与咖啡，享受水乡宁静。'
-                  ]
-                }]
-              },
-              { time: '10:00-14:00', type: '餐饮', title: '午餐与准备返程', desc: '在乌镇吃午餐，随后准备包车返回上海。', location: '乌镇', highlights: [], details: null },
-              { time: '14:00-16:00', type: '交通', title: '包车返回上海', desc: '车程约2小时。最迟 16:00 出发，可以早点出发回上海整理行李。', location: '上海南京东路', highlights: [], details: null },
-              { time: '16:00之后', type: '景点', title: '南京路逛街与晚餐', desc: '逛南京路步行街买手信，整理行李。晚上在南京路步行街吃晚餐。', location: '上海南京东路步行街', highlights: [], details: null }
-            ]
-          },
-          {
-            date: '11/07', title: 'Day 8: 上海City Walk与返回大马', route: '南京路 ➔ 上海博物馆 ➔ 张园 ➔ 机场',
-            items: [
-              { time: '09:00', type: '交通', title: 'Check out 酒店退房', desc: '办理退房，寄存行李，开启最后一日行程。', location: '上海酒店', highlights: [], details: null },
-              { time: '09:00-12:00', type: '景点', title: '南京路逛街吃饭', desc: '南京路步行街最后扫街与午餐。', location: '上海南京东路步行街', highlights: [], details: null },
-              { time: '12:00-13:00', type: '景点', title: '上海博物馆', desc: '【极度重要】必须在11月1日（提前7天）中午12:00整，通过微信小程序“上海博物馆”准点抢实名预约票！', location: '上海博物馆', highlights: [{type: '硬性', text: '11月1日中午12点抢票'}], details: null },
-              { time: '13:00-14:30', type: '餐饮', title: '星巴克臻选上海烘焙工坊', desc: '打车前往南京西路。参观、喝咖啡、吃甜品。', location: '星巴克臻选上海烘焙工坊', highlights: [{type: '必游', text: '沉浸式烘焙工坊'}], details: null },
-              { time: '14:30-16:00', type: '景点', title: '百年张园 (备选思南公馆)', desc: '从星巴克出来，马路斜对面就是张园。', location: '上海张园', highlights: [{type: '必游', text: '弄堂咖啡极度出片'}],
-                details: [{
-                  title: '🏘️ 街区打卡指南：',
-                  points: [
-                    '<b>张园：</b>被誉为“海上第一名园”，上海现存规模最大、保存最完整、建筑风格最丰富的石库门里弄。全新修复后顶奢汇聚，一定要在石库门老砖墙下喝一杯弄堂咖啡。',
-                    '<b>备选景点【思南公馆】：</b>上海市中心唯一留存的、以成片花园洋房为核心的历史风貌区，上世纪三十年代社会名流聚居地。'
-                  ]
-                }]
-              },
-              { time: '18:30-20:30', type: '餐饮', title: '晚餐与最后的闲逛', desc: '回到南京路步行街吃晚餐、逛街，提取行李。', location: '上海南京东路步行街', highlights: [], details: null },
-              { time: '22:00-23:30', type: '交通', title: '包车前往浦东机场', desc: '乘坐预订好的9座商务包车直达浦东机场T2航站楼。', location: '上海浦东国际机场', highlights: [], details: null }
-            ]
-          },
-          {
-            date: '11/08', title: 'Day 9: 完美返航', route: '浦东机场起飞',
-            items: [
-              { time: '02:15', type: '交通', title: '航班起飞', desc: '办理登机牌与托运，安全返航，结束华东九日行。', location: '上海浦东国际机场', highlights: [], details: null }
+            "title": "📌 实用信息与注意事项",
+            "points": [
+              "已订10/30起住宿，须通知酒店10/31凌晨到店并保留房间，避免按未入住处理。航班号、航站楼待核对。【物流】 办理入住【汉庭酒店（上海南京东路店）】，卸下5件大行李，强制补眠。"
             ]
           }
+        ],
+        "highlights": [],
+        "locations": [
+          {
+            "name": "浦东国际机场",
+            "region": "上海",
+            "note": "核对地图结果的地址后，再点“到这去／导航”。"
+          },
+          {
+            "name": "汉庭酒店（上海南京东路步行街店）",
+            "region": "上海",
+            "note": "酒店名称沿用 Excel；请与订单的地址、电话核对，勿直接选择同名分店。"
+          }
+        ],
+        "links": []
+      },
+      {
+        "row": 12,
+        "id": "d1-r12",
+        "time": "10:30-12:00",
+        "title": "南京东路步行街",
+        "type": "景点",
+        "desc": "补眠后再出门，在酒店附近南京东路慢逛、吃早午餐；不必全段走完，购物可留Day 8。【玩点】 观赏沿线历史悠久的四大公司建筑，打卡新世界大丸百货及各类旗舰店。从酒店步行到附近南京东路街区，早餐和短逛即可；如凌晨到店更晚，上午出门顺延，不勉强纵穿整条街。",
+        "details": [
+          {
+            "title": "🥢 餐饮与补充安排",
+            "points": [
+              "早午餐＋沈大成糕点；店铺营业时间以当天为准。（推荐：青团、条头糕）"
+            ]
+          },
+          {
+            "title": "📌 实用信息与注意事项",
+            "points": [
+              "沿街老字号众多，可顺路采购特产。"
+            ]
+          }
+        ],
+        "highlights": [],
+        "locations": [
+          {
+            "name": "南京东路步行街",
+            "region": "上海",
+            "note": "核对地图结果的地址后，再点“到这去／导航”。"
+          },
+          {
+            "name": "沈大成 南京东路",
+            "region": "上海",
+            "note": "核对地图结果的地址后，再点“到这去／导航”。"
+          }
+        ],
+        "links": [
+          "http://xhslink.com/o/A4P5FfSR0Dm"
+        ]
+      },
+      {
+        "row": 18,
+        "id": "d1-r18",
+        "time": "12:00-16:30",
+        "title": "豫园与城隍庙",
+        "type": "景点",
+        "desc": "12:00-12:30前往豫园片区；12:30-13:15午餐，13:15-15:00园林，15:00-16:00九曲桥与城隍庙片区，16:00-16:30坐下休息。",
+        "details": [
+          {
+            "title": "🗺️ 游览路线、交通与拍照",
+            "points": [
+              "九曲桥与湖心亭位于豫园园林外的商城区域，不等同于收费园林。城隍庙入内约20-30分钟，须在当日开放时段内。【园林精华约1小时45分钟】大假山、仰山堂／卷雨楼、点春堂、玉华\n堂与玉玲珑。按现场导览串联，不照搬网红机位顺序。\n下午入园，删除原文“开园即入”的冲突说明。园外九曲桥另留时间。【交通估时】酒店／南京路至豫园，含叫车和步行预留30分钟；5人须可载5名乘客的商务车，或两辆普通出租车。原45元为预算，非核实报价。"
+            ]
+          },
+          {
+            "title": "🥢 餐饮与补充安排",
+            "points": [
+              "推荐老字号与美食:",
+              "南翔馒头店: 必尝蟹粉小笼包。一楼外卖窗口便宜快 捷,楼上堂食环境更好、品种更多。",
+              "绿波廊: 名声在外的本帮菜馆,以精致点心和国宴菜闻 名,适合预算充足的体验。",
+              "宁波汤团店: 尝尝地道的黑芝麻汤圆。",
+              "松月楼: 著名的净素菜馆,素菜包和海棠糕非常出名。"
+            ]
+          },
+          {
+            "title": "📌 实用信息与注意事项",
+            "points": [
+              "豫园通常9:00-16:30，16:00停止入园，周一闭园；10/31为周六。旺季成人40元，原5人200元保留。城隍庙另票、关门时间待确认。"
+            ]
+          },
+          {
+            "title": "💰 表内费用／预算",
+            "points": [
+              "门票打滴滴：200.045.0元（表内预算；人数口径及说明见上文）"
+            ]
+          }
+        ],
+        "highlights": [],
+        "locations": [
+          {
+            "name": "豫园",
+            "region": "上海",
+            "note": "核对地图结果的地址后，再点“到这去／导航”。"
+          },
+          {
+            "name": "上海城隍庙",
+            "region": "上海",
+            "note": "核对地图结果的地址后，再点“到这去／导航”。"
+          },
+          {
+            "name": "九曲桥",
+            "region": "上海",
+            "note": "核对地图结果的地址后，再点“到这去／导航”。"
+          },
+          {
+            "name": "南翔馒头店 豫园",
+            "region": "上海",
+            "note": "核对地图结果的地址后，再点“到这去／导航”。"
+          },
+          {
+            "name": "绿波廊 豫园",
+            "region": "上海",
+            "note": "核对地图结果的地址后，再点“到这去／导航”。"
+          },
+          {
+            "name": "宁波汤团店 豫园",
+            "region": "上海",
+            "note": "核对地图结果的地址后，再点“到这去／导航”。"
+          },
+          {
+            "name": "松月楼 豫园",
+            "region": "上海",
+            "note": "核对地图结果的地址后，再点“到这去／导航”。"
+          }
+        ],
+        "links": [
+          "http://xhslink.com/o/8NuBTPf49n4",
+          "http://xhslink.com/o/1dN9NOsTlpN"
+        ]
+      },
+      {
+        "row": 39,
+        "id": "d1-r39",
+        "time": "16:30-20:00",
+        "title": "外滩夜景漫步",
+        "type": "景点",
+        "desc": "16:30-17:15前往外滩并拍傍晚江景；17:15-18:15德兴馆晚餐（就近门店待确认）；18:15-19:30外滩夜游，约20:00回酒店。",
+        "details": [
+          {
+            "title": "🗺️ 游览路线、交通与拍照",
+            "points": [
+              "从海关大楼沿江向北至和平饭店、外白渡桥；乍浦路桥视体力选去，避免往返跑多个桥。【顺路路线】豫园片区→外滩南段→海关大楼→和平饭店→外白渡桥→酒店方向。沿途边走边拍约1-1.5小时。傍晚蓝调时刻在日落前后，19:00-21:30已是夜景，不再标为蓝调。原小红书链接保留供参考。豫园至外滩步行约20-30分钟，疲劳可叫车但需计等车。散步后步行或商务车返回【汉庭酒店（上海南京东路店）】；原30元仅预算。"
+            ]
+          },
+          {
+            "title": "🥢 餐饮与补充安排",
+            "points": [
+              "晚餐：德兴馆",
+              "（传统本帮菜，推荐：焖肉面、响油鳝糊、草头圈子）"
+            ]
+          },
+          {
+            "title": "📌 实用信息与注意事项",
+            "points": [
+              "首晚以恢复体力为主。亮灯时间受季节／活动影响待确认，不把18:00整亮灯作为保证。"
+            ]
+          },
+          {
+            "title": "💰 表内费用／预算",
+            "points": [
+              "打滴滴：30.0元（表内预算；人数口径及说明见上文）"
+            ]
+          }
+        ],
+        "highlights": [],
+        "locations": [
+          {
+            "name": "外滩海关大楼",
+            "region": "上海",
+            "note": "核对地图结果的地址后，再点“到这去／导航”。"
+          },
+          {
+            "name": "和平饭店",
+            "region": "上海",
+            "note": "核对地图结果的地址后，再点“到这去／导航”。"
+          },
+          {
+            "name": "外白渡桥",
+            "region": "上海",
+            "note": "核对地图结果的地址后，再点“到这去／导航”。"
+          },
+          {
+            "name": "乍浦路桥",
+            "region": "上海",
+            "note": "核对地图结果的地址后，再点“到这去／导航”。"
+          },
+          {
+            "name": "德兴馆",
+            "region": "上海",
+            "note": "分店／地址待确认。此链接为城市内搜索，请先确认门店再导航。"
+          },
+          {
+            "name": "汉庭酒店（上海南京东路步行街店）",
+            "region": "上海",
+            "note": "酒店名称沿用 Excel；请与订单的地址、电话核对，勿直接选择同名分店。"
+          }
+        ],
+        "links": [
+          "http://xhslink.com/o/2i80w2gF4ya"
         ]
       }
+    ],
+    "date": "10/31",
+    "fullDate": "2026年10月31日 周六",
+    "title": "10月31日 周六 ｜ Day 1 ｜ 上海初印象",
+    "route": "浦东机场 → 酒店补眠 → 南京东路 → 豫园／城隍庙 → 外滩",
+    "hotel": "汉庭酒店（上海南京东路步行街店）",
+    "alert": ""
+  },
+  {
+    "items": [
+      {
+        "row": 52,
+        "id": "d2-r52",
+        "time": "09:00-09:30",
+        "title": "徐家汇大教堂",
+        "type": "景点",
+        "desc": "08:10-08:20从酒店出发，交通预留40-50分钟。徐家汇大教堂以外观拍照为基础；周日宗教活动优先，内部游客开放／预约待确认，不保证可进入。",
+        "details": [
+          {
+            "title": "📌 出行提醒",
+            "points": [
+              "按上方 Excel 时间与路线执行。表中未列的门票、预约和营业时间待确认；不将规划时段视为已预订时段。"
+            ]
+          }
+        ],
+        "highlights": [
+          {
+            "type": "预约",
+            "text": "规则及可选时段见攻略"
+          }
+        ],
+        "locations": [
+          {
+            "name": "徐家汇天主堂",
+            "region": "上海",
+            "note": "核对地图结果的地址后，再点“到这去／导航”。"
+          }
+        ],
+        "links": []
+      },
+      {
+        "row": 55,
+        "id": "d2-r55",
+        "time": "09:30-10:00",
+        "title": "徐家汇书院",
+        "type": "景点",
+        "desc": "步行约5分钟至徐家汇书院，参观约25分钟；周日通常9:00开馆，现行预约／限流待确认，保持安静。10:00-10:30转往武康大楼：优先打车（含候车20-30分钟）；地铁11号线徐家汇→交通大学仍需步行，出站并非即到大楼。",
+        "details": [
+          {
+            "title": "📌 出行提醒",
+            "points": [
+              "按上方 Excel 时间与路线执行。表中未列的门票、预约和营业时间待确认；不将规划时段视为已预订时段。"
+            ]
+          }
+        ],
+        "highlights": [
+          {
+            "type": "预约",
+            "text": "规则及可选时段见攻略"
+          }
+        ],
+        "locations": [
+          {
+            "name": "徐家汇书院",
+            "region": "上海",
+            "note": "核对地图结果的地址后，再点“到这去／导航”。"
+          },
+          {
+            "name": "武康大楼",
+            "region": "上海",
+            "note": "核对地图结果的地址后，再点“到这去／导航”。"
+          }
+        ],
+        "links": []
+      },
+      {
+        "row": 59,
+        "id": "d2-r59",
+        "time": "10:30-12:00",
+        "title": "法租界梧桐区漫步",
+        "type": "景点",
+        "desc": "武康大楼、武康庭、武康路往北慢行，止于安福路附近。安排1.5小时含咖啡与拍照，不再声称可完成2.5-3小时全路线。沿武康路顺向游览老洋房与店铺；宋庆龄故居仅外观，内部参观不额外插入。商业店铺以当天营业为准。【街区轻量路线】武康大楼→武康庭→武康路北段→安福路，约1.5-2公里，走走停停90分钟。不再先到宋庆龄故居再折返武康大楼。Teenie Weenie、罗密欧阳台、Wiggle Wiggle、Looknow&Flow等原店铺作为途经参考，不逐一强制打卡。",
+        "details": [
+          {
+            "title": "🥢 餐饮与补充安排",
+            "points": [
+              "出门前吃早餐；途中咖啡／面包按需。（推荐：Sunflour 或 Standbyme 的新鲜烘焙与咖啡）"
+            ]
+          }
+        ],
+        "highlights": [],
+        "locations": [
+          {
+            "name": "武康大楼",
+            "region": "上海",
+            "note": "核对地图结果的地址后，再点“到这去／导航”。"
+          },
+          {
+            "name": "武康庭",
+            "region": "上海",
+            "note": "核对地图结果的地址后，再点“到这去／导航”。"
+          },
+          {
+            "name": "安福路",
+            "region": "上海",
+            "note": "核对地图结果的地址后，再点“到这去／导航”。"
+          }
+        ],
+        "links": [
+          "http://xhslink.com/o/8rHxW9eZrUT"
+        ]
+      },
+      {
+        "row": 68,
+        "id": "d2-r68",
+        "time": "12:00-13:30",
+        "title": "午餐【人和馆】",
+        "type": "餐饮",
+        "desc": "人和馆午餐（保留），蟹粉捞饭。具体分店和地址待确认，12:00到店目标须包含街区至餐厅交通。",
+        "details": [
+          {
+            "title": "🗺️ 游览路线、交通与拍照",
+            "points": [
+              "按确认分店导航：附近可步行10-20分钟；若不在武康／安福路片区，须另计20-40分钟交通，不能默认步行即到。"
+            ]
+          },
+          {
+            "title": "🥢 餐饮与补充安排",
+            "points": [
+              "提前询问该分店预约／线上取号规则；原10:00-10:30取号仅作参考。排队超过30分钟需压缩购物时段，不挤占跨江交通。"
+            ]
+          }
+        ],
+        "highlights": [
+          {
+            "type": "预约",
+            "text": "规则及可选时段见攻略"
+          }
+        ],
+        "locations": [
+          {
+            "name": "人和馆",
+            "region": "上海",
+            "note": "分店／地址待确认。此链接为城市内搜索，请先确认门店再导航。"
+          }
+        ],
+        "links": []
+      },
+      {
+        "row": 74,
+        "id": "d2-r74",
+        "time": "13:30-15:00",
+        "title": "【迪士尼商店】",
+        "type": "景点",
+        "desc": "13:30-14:20从餐厅跨江到陆家嘴，地铁／打车均预留40-50分钟；14:20-15:00逛陆家嘴迪士尼商店（非迪士尼乐园）。",
+        "details": [
+          {
+            "title": "📌 出行提醒",
+            "points": [
+              "按上方 Excel 时间与路线执行。表中未列的门票、预约和营业时间待确认；不将规划时段视为已预订时段。"
+            ]
+          }
+        ],
+        "highlights": [],
+        "locations": [
+          {
+            "name": "陆家嘴迪士尼旗舰店",
+            "region": "上海",
+            "note": "核对地图结果的地址后，再点“到这去／导航”。"
+          }
+        ],
+        "links": []
+      },
+      {
+        "row": 76,
+        "id": "d2-r76",
+        "time": "15:00-15:40",
+        "title": "陆家嘴",
+        "type": "景点",
+        "desc": "东方明珠周边天桥→陆家嘴楼群机位→金茂外观，步行含拍照约40分钟，注意过街与人流。接着导航到【金茂君悦酒店】，就是陆家嘴经典机位，蹲下来开广角",
+        "details": [
+          {
+            "title": "📌 出行提醒",
+            "points": [
+              "按上方 Excel 时间与路线执行。表中未列的门票、预约和营业时间待确认；不将规划时段视为已预订时段。"
+            ]
+          }
+        ],
+        "highlights": [],
+        "locations": [
+          {
+            "name": "东方明珠",
+            "region": "上海",
+            "note": "核对地图结果的地址后，再点“到这去／导航”。"
+          },
+          {
+            "name": "金茂君悦大酒店",
+            "region": "上海",
+            "note": "酒店名称沿用 Excel；请与订单的地址、电话核对，勿直接选择同名分店。"
+          }
+        ],
+        "links": []
+      },
+      {
+        "row": 79,
+        "id": "d2-r79",
+        "time": "15:40-17:30",
+        "title": "上海中心大厦",
+        "type": "景点",
+        "desc": "15:40前到上海中心预约入口，安检／排队预留30-40分钟，16:20-17:15朵云书院，17:15开始下楼。【朵云书院52楼】保留阅读与高处观景体验；天气决定能见度。书院不是上海之巅观光层；不把购买饮品与日落视野视为保证。",
+        "details": [
+          {
+            "title": "🥢 餐饮与补充安排",
+            "points": [
+              "通过朵云书院官方公布的“佰朋”入口核实11/1预约，放号日期、时段及观景区消费规则待确认。原清单写法不一致，以官方为准。"
+            ]
+          }
+        ],
+        "highlights": [
+          {
+            "type": "预约",
+            "text": "规则及可选时段见攻略"
+          }
+        ],
+        "locations": [
+          {
+            "name": "朵云书院 旗舰店 上海中心",
+            "region": "上海",
+            "note": "核对地图结果的地址后，再点“到这去／导航”。"
+          }
+        ],
+        "links": []
+      },
+      {
+        "row": 85,
+        "id": "d2-r85",
+        "time": "17:30-18:30",
+        "title": "坐船欣赏江景",
+        "type": "交通",
+        "desc": "17:30离开上海中心，叫车／步行至泰同栈渡口，目标18:00前到；候船和过江预留20-30分钟，乘泰公线到公平路。原2元票价保留为参考，末班与当天运营待确认。停航或赶不上则打车过江。",
+        "details": [
+          {
+            "title": "📌 出行提醒",
+            "points": [
+              "按上方 Excel 时间与路线执行。表中未列的门票、预约和营业时间待确认；不将规划时段视为已预订时段。"
+            ]
+          }
+        ],
+        "highlights": [],
+        "locations": [
+          {
+            "name": "泰同栈渡口",
+            "region": "上海",
+            "note": "核对地图结果的地址后，再点“到这去／导航”。"
+          },
+          {
+            "name": "公平路渡口",
+            "region": "上海",
+            "note": "核对地图结果的地址后，再点“到这去／导航”。"
+          }
+        ],
+        "links": []
+      },
+      {
+        "row": 88,
+        "id": "d2-r88",
+        "time": "18:30-20:30",
+        "title": "北外滩滨江夜游",
+        "type": "景点",
+        "desc": "先在北外滩附近晚餐45-60分钟，再沿公平路渡口向国客中心方向散步30-45分钟；不额外跨区找餐厅。北外滩滨江可看对岸陆家嘴及外滩建筑群，周日人流可能较多，不能保证空场。【玩点】 漫步至北外滩国客中心，在巨型“巨蛋”反射镜前拍摄对岸摩天大楼。【市内交通】散步后呼叫滴滴6座商务车返回【汉庭酒店（上海南京东路店）】。约20:30返回酒店。晚餐门店待确认；第二天跨城，建议不延长夜游。",
+        "details": [
+          {
+            "title": "📌 出行提醒",
+            "points": [
+              "按上方 Excel 时间与路线执行。表中未列的门票、预约和营业时间待确认；不将规划时段视为已预订时段。"
+            ]
+          }
+        ],
+        "highlights": [],
+        "locations": [
+          {
+            "name": "北外滩国客中心",
+            "region": "上海",
+            "note": "核对地图结果的地址后，再点“到这去／导航”。"
+          },
+          {
+            "name": "汉庭酒店（上海南京东路步行街店）",
+            "region": "上海",
+            "note": "酒店名称沿用 Excel；请与订单的地址、电话核对，勿直接选择同名分店。"
+          }
+        ],
+        "links": []
+      }
+    ],
+    "date": "11/01",
+    "fullDate": "2026年11月01日 周日",
+    "title": "11月1日 周日 ｜ Day 2 ｜ 上海时空漫游",
+    "route": "徐家汇 → 武康路 → 人和馆 → 陆家嘴 → 轮渡 → 北外滩",
+    "hotel": "汉庭酒店（上海南京东路步行街店）",
+    "alert": ""
+  },
+  {
+    "items": [
+      {
+        "row": 98,
+        "id": "d3-r98",
+        "time": "08:30-12:30",
+        "title": "跨城转移与存行李",
+        "type": "交通",
+        "desc": "08:00-08:30退房装车；08:30按原计划出发，上海至无锡酒店按2.5-3小时规划，约11:00-11:30抵达，再留20-30分钟寄存／洗手间。",
+        "details": [
+          {
+            "title": "🗺️ 游览路线、交通与拍照",
+            "points": [
+              "【跨城包车保留】7座／9座商务车直达【全季酒店（无锡南长街店）】。须确认5人＋5件大行李的实际空间；车程为规划估算，非司机保证。"
+            ]
+          },
+          {
+            "title": "🥢 餐饮与补充安排",
+            "points": [
+              "早餐：简单吃"
+            ]
+          },
+          {
+            "title": "📌 实用信息与注意事项",
+            "points": [
+              "【物流（硬性）】 抵达无锡后，包车直奔【全季酒店（无锡南长街店）】，必须先将5件大行李寄存于前台，方可空手开启行程。 note: 无锡必吃张凌赫推荐：熙盛源"
+            ]
+          },
+          {
+            "title": "💰 表内费用／预算",
+            "points": [
+              "note: 无锡必吃张凌赫推荐： 熙盛源"
+            ]
+          }
+        ],
+        "highlights": [],
+        "locations": [
+          {
+            "name": "全季酒店（无锡南长街店）",
+            "region": "无锡",
+            "note": "酒店名称沿用 Excel；请与订单的地址、电话核对，勿直接选择同名分店。"
+          }
+        ],
+        "links": []
+      },
+      {
+        "row": 107,
+        "id": "d3-r107",
+        "time": "12:30-14:00",
+        "title": "惠山古镇",
+        "type": "景点",
+        "desc": "约12:30抵惠山古镇，先午餐约1小时，再沿古镇主街散步30分钟；付费园林留到14:00。抵达晚时先保证寄畅园，不增加新景点。",
+        "details": [
+          {
+            "title": "🗺️ 游览路线、交通与拍照",
+            "points": [
+              "【玩点】 漫步在古色古香的石板路上，观赏两岸保存完好的清代祠堂，探访徽派与苏式结合的民居。【路线】古镇入口→主街／祠堂外观→寄畅园所在文物古迹区。原宝善桥、映月里等点位不作为导航依据，抵达后按官方导览核对；不等待桥上夜景而耽误南长街。酒店至惠山古镇含等车、城区行驶及入口步行预留30-40分钟；不采用原12分钟的无缓冲估时。"
+            ]
+          },
+          {
+            "title": "🥢 餐饮与补充安排",
+            "points": [
+              "午餐：王兴记",
+              "（老字号，必点：无锡大红汤面、三鲜馄饨、无锡小笼包）"
+            ]
+          },
+          {
+            "title": "📌 实用信息与注意事项",
+            "points": [
+              "免费街区与付费文物古迹区分开；寄畅园需相应门票，不能理解为全部免费。王兴记具体门店待确认。"
+            ]
+          }
+        ],
+        "highlights": [],
+        "locations": [
+          {
+            "name": "惠山古镇",
+            "region": "无锡",
+            "note": "核对地图结果的地址后，再点“到这去／导航”。"
+          },
+          {
+            "name": "王兴记",
+            "region": "无锡",
+            "note": "分店／地址待确认。此链接为城市内搜索，请先确认门店再导航。"
+          }
+        ],
+        "links": []
+      },
+      {
+        "row": 119,
+        "id": "d3-r119",
+        "time": "14:00-16:00",
+        "title": "寄畅园深度游",
+        "type": "景点",
+        "desc": "寄畅园游览约75-90分钟，余时古迹区／茶歇30分钟。园内重点看锦汇漪、借景、山水叠石，避免将单一小园安排2.5小时。",
+        "details": [
+          {
+            "title": "🗺️ 游览路线、交通与拍照",
+            "points": [
+              "【玩点】 体验园林精妙的“借景”手法（将远处的锡山龙光塔借入园中景观），欣赏锦汇漪的倒影与山水叠石。园内步行。16:00离园，16:00-17:30返回全季办理入住、休息后再去南长街。"
+            ]
+          },
+          {
+            "title": "🥢 餐饮与补充安排",
+            "points": [
+              "下午茶：古镇内临水茶馆",
+              "（品尝太湖翠竹绿茶、本地梅花糕）"
+            ]
+          },
+          {
+            "title": "📌 实用信息与注意事项",
+            "points": [
+              "周一通常开放。现有公开信息日场约8:00-17:00、16:30停止入园；11/2开放、门票范围与临时调整待景区确认。"
+            ]
+          }
+        ],
+        "highlights": [],
+        "locations": [
+          {
+            "name": "寄畅园",
+            "region": "无锡",
+            "note": "核对地图结果的地址后，再点“到这去／导航”。"
+          },
+          {
+            "name": "全季酒店（无锡南长街店）",
+            "region": "无锡",
+            "note": "酒店名称沿用 Excel；请与订单的地址、电话核对，勿直接选择同名分店。"
+          }
+        ],
+        "links": []
+      },
+      {
+        "row": 128,
+        "id": "d3-r128",
+        "time": "17:30-20:30",
+        "title": "南长街运河夜景",
+        "type": "景点",
+        "desc": "【介绍】 京杭大运河畔保留最完整的古街区，典型的“水弄堂”江南水乡格局。【玩点】 跨越标志性的清名桥，看两岸红灯笼亮起，微风拂面，观赏千年古运河的静谧与热闹。古镇回【全季酒店（无锡南长街店）】预留30-40分钟，入住休息约40分钟。17:30起南长街晚餐夜游，回程步行或打车取决于酒店具体入口。",
+        "details": [
+          {
+            "title": "🥢 餐饮与补充安排",
+            "points": [
+              "晚餐：南长街沿岸本帮菜馆",
+              "（推荐：太湖三白、清蒸白鱼、无锡排骨、银鱼炒蛋）"
+            ]
+          },
+          {
+            "title": "📌 实用信息与注意事项",
+            "points": [
+              "桨声灯影，是无锡夜景的颜值巅峰。"
+            ]
+          }
+        ],
+        "highlights": [],
+        "locations": [
+          {
+            "name": "南长街",
+            "region": "无锡",
+            "note": "核对地图结果的地址后，再点“到这去／导航”。"
+          },
+          {
+            "name": "清名桥",
+            "region": "无锡",
+            "note": "核对地图结果的地址后，再点“到这去／导航”。"
+          },
+          {
+            "name": "全季酒店（无锡南长街店）",
+            "region": "无锡",
+            "note": "酒店名称沿用 Excel；请与订单的地址、电话核对，勿直接选择同名分店。"
+          }
+        ],
+        "links": []
+      }
+    ],
+    "date": "11/02",
+    "fullDate": "2026年11月02日 周一",
+    "title": "11月2日 周一 ｜ Day 3 ｜ 上海 ➔ 无锡运河夜色",
+    "route": "上海 → 无锡酒店 → 惠山古镇／寄畅园 → 南长街",
+    "hotel": "全季酒店（无锡南长街店）",
+    "alert": ""
+  },
+  {
+    "items": [
+      {
+        "row": 136,
+        "id": "d4-r136",
+        "time": "09:00-11:00",
+        "title": "跨城转移与存行李",
+        "type": "交通",
+        "desc": "08:30-09:00退房装车；09:00按原计划出发，无锡至苏州酒店预留1-1.5小时，加20-30分钟存行李。",
+        "details": [
+          {
+            "title": "🗺️ 游览路线、交通与拍照",
+            "points": [
+              "【跨城包车保留】9座商务车至【安逸酒店（苏州观前街平江路店）】；酒店名称、地址以订单核对，不假定10:00准时已办完寄存。"
+            ]
+          },
+          {
+            "title": "🥢 餐饮与补充安排",
+            "points": [
+              "早餐：简单吃"
+            ]
+          },
+          {
+            "title": "📌 实用信息与注意事项",
+            "points": [
+              "【物流（硬性）】 抵达苏州后，包车直奔【安逸酒店（苏州观前街平江路店）】，必须先将5件大行李寄存前台。"
+            ]
+          }
+        ],
+        "highlights": [],
+        "locations": [
+          {
+            "name": "安逸酒店（苏州观前街平江路店）",
+            "region": "苏州",
+            "note": "酒店名称沿用 Excel；请与订单的地址、电话核对，勿直接选择同名分店。"
+          }
+        ],
+        "links": []
+      },
+      {
+        "row": 143,
+        "id": "d4-r143",
+        "time": "11:00-13:30",
+        "title": "拙政园",
+        "type": "景点",
+        "desc": "11:00-11:30前往园门、核验入园，11:30-13:30专心游览拙政园。删除另一园林后不补景点，给拙政园完整2小时。",
+        "details": [
+          {
+            "title": "🗺️ 游览路线、交通与拍照",
+            "points": [
+              "游览远香堂、小飞虹、中部池景及西部园林；按现场导览走，不为机位来回折返。11月官方常规开放7:30-17:00，16:30停止检票；临时调整以景区公告为准。酒店至园门预留20-30分钟（含候车／步行），选覆盖预计到达时间的预约段。园内全步行。"
+            ]
+          },
+          {
+            "title": "🥢 餐饮与补充安排",
+            "points": [
+              "用餐说明：园内不设正餐，建议轻装游览。",
+              "出门前吃足早餐，随身带少量零食与水；午餐顺延至13:30。"
+            ]
+          },
+          {
+            "title": "📌 实用信息与注意事项",
+            "points": [
+              "11月通常淡季70元／成人，5人参考350元；官方实名分时购票。原“提前14天、80元”不沿用；可预约窗口及护照核验待确认，10/27开始查看。"
+            ]
+          }
+        ],
+        "highlights": [
+          {
+            "type": "预约",
+            "text": "规则及可选时段见攻略"
+          }
+        ],
+        "locations": [
+          {
+            "name": "拙政园",
+            "region": "苏州",
+            "note": "核对地图结果的地址后，再点“到这去／导航”。"
+          }
+        ],
+        "links": []
+      },
+      {
+        "row": 155,
+        "id": "d4-r155",
+        "time": "13:30-15:00",
+        "title": "午餐：松鹤楼（平江路店） MUST EAT",
+        "type": "餐饮",
+        "desc": "保留松鹤楼（平江路店）MUST EAT。出园后步行／打车含等候约15-25分钟，再用餐约60分钟。分店地址、午间接待及预约待确认。",
+        "details": [
+          {
+            "title": "📌 出行提醒",
+            "points": [
+              "按上方 Excel 时间与路线执行。表中未列的门票、预约和营业时间待确认；不将规划时段视为已预订时段。"
+            ]
+          }
+        ],
+        "highlights": [
+          {
+            "type": "预约",
+            "text": "规则及可选时段见攻略"
+          }
+        ],
+        "locations": [
+          {
+            "name": "松鹤楼 平江路店",
+            "region": "苏州",
+            "note": "分店／地址待确认。此链接为城市内搜索，请先确认门店再导航。"
+          }
+        ],
+        "links": []
+      },
+      {
+        "row": 159,
+        "id": "d4-r159",
+        "time": "15:00-17:00",
+        "title": "平江路历史街区",
+        "type": "景点",
+        "desc": "沿平江路散步、拍照约60-75分钟，评弹／喝茶约45-60分钟，合计控制2小时。",
+        "details": [
+          {
+            "title": "🗺️ 游览路线、交通与拍照",
+            "points": [
+              "【玩点】 漫步在“小桥流水人家”的弄堂间。安排5人进入茶馆，听一曲地道的苏州评弹（吴侬软语，弦索叮咚），喝茶吃茶点。【交通】 餐厅出来后直接 步行 拐入平江路历史街区，全程步行。"
+            ]
+          },
+          {
+            "title": "🥢 餐饮与补充安排",
+            "points": [
+              "下午茶：平江路沿线茶馆",
+              "（品尝洞庭碧螺春茶，听《声声慢》或经典弹词）"
+            ]
+          },
+          {
+            "title": "📌 实用信息与注意事项",
+            "points": [
+              "优先预约约15:30-16:30的评弹场次，具体店家待确认；现场排队超过30分钟则改普通茶歇，保留傍晚山塘街。"
+            ]
+          }
+        ],
+        "highlights": [
+          {
+            "type": "预约",
+            "text": "规则及可选时段见攻略"
+          }
+        ],
+        "locations": [
+          {
+            "name": "平江路历史街区",
+            "region": "苏州",
+            "note": "核对地图结果的地址后，再点“到这去／导航”。"
+          }
+        ],
+        "links": []
+      },
+      {
+        "row": 167,
+        "id": "d4-r167",
+        "time": "17:30-20:00",
+        "title": "七里山塘街夜游",
+        "type": "景点",
+        "desc": "【介绍】 被誉为“姑苏第一名街”，白居易任苏州刺史时所建，是曹雪芹笔下“最红尘中一二等富贵之地”。17:00-17:30转往山塘街；17:30-18:30晚餐，18:30-19:30沿河夜景。摇橹船保留为自费可选，若排队久可留乌镇体验。平江路至山塘街含候车预留30-40分钟，回酒店同样预留约30分钟。5人用商务车／两辆出租车；原17／22分钟不作承诺。",
+        "details": [
+          {
+            "title": "🥢 餐饮与补充安排",
+            "points": [
+              "晚餐：新市井面馆",
+              "（推荐：苏式汤面，如焖肉面、爆鱼面，汤头清澈鲜美）"
+            ]
+          },
+          {
+            "title": "📌 实用信息与注意事项",
+            "points": [
+              "晚间红灯笼亮起时，宛如现实版《千与千寻》。"
+            ]
+          }
+        ],
+        "highlights": [],
+        "locations": [
+          {
+            "name": "七里山塘景区",
+            "region": "苏州",
+            "note": "核对地图结果的地址后，再点“到这去／导航”。"
+          },
+          {
+            "name": "新市井面馆",
+            "region": "苏州",
+            "note": "分店／地址待确认。此链接为城市内搜索，请先确认门店再导航。"
+          }
+        ],
+        "links": []
+      },
+      {
+        "row": 173,
+        "id": "d4-r173",
+        "time": "20:30后（可选）",
+        "title": "观前街",
+        "type": "景点",
+        "desc": "返回【安逸酒店（苏州观前街平江路店）】后，视体力在观前街短逛20-30分钟，不强制第二轮夜游。",
+        "details": [
+          {
+            "title": "📌 出行提醒",
+            "points": [
+              "按上方 Excel 时间与路线执行。表中未列的门票、预约和营业时间待确认；不将规划时段视为已预订时段。"
+            ]
+          }
+        ],
+        "highlights": [
+          {
+            "type": "提醒",
+            "text": "按体力选择"
+          }
+        ],
+        "locations": [
+          {
+            "name": "观前街",
+            "region": "苏州",
+            "note": "核对地图结果的地址后，再点“到这去／导航”。"
+          },
+          {
+            "name": "安逸酒店（苏州观前街平江路店）",
+            "region": "苏州",
+            "note": "酒店名称沿用 Excel；请与订单的地址、电话核对，勿直接选择同名分店。"
+          }
+        ],
+        "links": []
+      }
+    ],
+    "date": "11/03",
+    "fullDate": "2026年11月03日 周二",
+    "title": "11月3日 周二 ｜ Day 4 ｜ 无锡 ➔ 苏州",
+    "route": "无锡 → 苏州酒店 → 拙政园 → 平江路 → 山塘街",
+    "hotel": "安逸酒店（苏州观前街平江路店）",
+    "alert": ""
+  },
+  {
+    "items": [
+      {
+        "row": 176,
+        "id": "d5-r176",
+        "time": "09:00-12:30",
+        "title": "跨城转移与存行李",
+        "type": "交通",
+        "desc": "08:30-09:00退房装车；09:00按原计划乘包车出发，苏州至杭州酒店预留2.5-3小时，抵达后再留20-30分钟存行李。【跨城包车保留】9座商务车直达【杭州西湖东坡酒店】。约11:30-12:00到店是目标而非保证；12:30前完成寄存，未到入住时间可游湖后办房。",
+        "details": [
+          {
+            "title": "🥢 餐饮与补充安排",
+            "points": [
+              "早餐：自理 / 酒店外卖"
+            ]
+          }
+        ],
+        "highlights": [],
+        "locations": [
+          {
+            "name": "杭州西湖东坡酒店",
+            "region": "杭州",
+            "note": "酒店名称沿用 Excel；请与订单的地址、电话核对，勿直接选择同名分店。"
+          }
+        ],
+        "links": []
+      },
+      {
+        "row": 181,
+        "id": "d5-r181",
+        "time": "12:30-13:30",
+        "title": "酒店附近午餐",
+        "type": "餐饮",
+        "desc": "酒店／湖滨附近午餐45-60分钟，选择方便且排队短的店；不跨湖追逐名店。餐后洗手间、带水与外套。",
+        "details": [
+          {
+            "title": "📌 出行提醒",
+            "points": [
+              "按上方 Excel 时间与路线执行。表中未列的门票、预约和营业时间待确认；不将规划时段视为已预订时段。"
+            ]
+          }
+        ],
+        "highlights": [],
+        "locations": [
+          {
+            "name": "杭州西湖东坡酒店",
+            "region": "杭州",
+            "note": "酒店名称沿用 Excel；请与订单的地址、电话核对，勿直接选择同名分店。"
+          }
+        ],
+        "links": []
+      },
+      {
+        "row": 183,
+        "id": "d5-r183",
+        "time": "13:30-14:00",
+        "title": "湖滨二公园登船",
+        "type": "景点",
+        "desc": "从东坡酒店步行约10-15分钟到湖滨二公园正规游船码头；13:45左右到码头，购票与候船15-30分钟。买含小瀛洲登岛及离岛船程的上岛游票。",
+        "details": [
+          {
+            "title": "🥢 餐饮与补充安排",
+            "points": [
+              "参考55-70元／成人，5人275-350元；船型、最新票价与退改以官方售票为准。"
+            ]
+          },
+          {
+            "title": "📌 实用信息与注意事项",
+            "points": [
+              "先问清离岛末班、去花港的班次与票种；普通环湖船不一定可登岛。"
+            ]
+          }
+        ],
+        "highlights": [],
+        "locations": [
+          {
+            "name": "西湖 二公园游船码头",
+            "region": "杭州",
+            "note": "码头名称用于区域内搜索；具体入口、当日航段和上下船点须询现场工作人员。"
+          }
+        ],
+        "links": []
+      },
+      {
+        "row": 186,
+        "id": "d5-r186",
+        "time": "14:00-14:25",
+        "title": "乘船至小瀛洲",
+        "type": "交通",
+        "desc": "湖滨二公园码头→小瀛洲（三潭印月），航行规划约15-25分钟；如首选码头临时调整，询问工作人员就近上岛班船。船上看湖面与远处雷峰塔。",
+        "details": [
+          {
+            "title": "🥢 餐饮与补充安排",
+            "points": [
+              "上岛前先用洗手间；不另排一场跨区下午茶。"
+            ]
+          },
+          {
+            "title": "📌 实用信息与注意事项",
+            "points": [
+              "此为规划时段，非固定船班。风雨停航则执行本日末段陆地备选。"
+            ]
+          }
+        ],
+        "highlights": [],
+        "locations": [
+          {
+            "name": "西湖 二公园游船码头",
+            "region": "杭州",
+            "note": "码头名称用于区域内搜索；具体入口、当日航段和上下船点须询现场工作人员。"
+          },
+          {
+            "name": "小瀛洲 三潭印月",
+            "region": "杭州",
+            "note": "核对地图结果的地址后，再点“到这去／导航”。"
+          }
+        ],
+        "links": []
+      },
+      {
+        "row": 189,
+        "id": "d5-r189",
+        "time": "14:25-15:20",
+        "title": "三潭印月／小瀛洲",
+        "type": "景点",
+        "desc": "小瀛洲就是三潭印月的登岛游览区域，不是两个要分别乘船的景点。沿九曲桥、湖心庭院、我心相印亭一带游览；步行30-35分钟、拍三座石塔10分钟、坐下休息10分钟，共约55分钟。",
+        "details": [
+          {
+            "title": "📌 出行提醒",
+            "points": [
+              "按上方 Excel 时间与路线执行。表中未列的门票、预约和营业时间待确认；不将规划时段视为已预订时段。"
+            ]
+          }
+        ],
+        "highlights": [],
+        "locations": [
+          {
+            "name": "小瀛洲 三潭印月",
+            "region": "杭州",
+            "note": "核对地图结果的地址后，再点“到这去／导航”。"
+          },
+          {
+            "name": "小瀛洲 我心相印亭",
+            "region": "杭州",
+            "note": "核对地图结果的地址后，再点“到这去／导航”。"
+          }
+        ],
+        "links": []
+      },
+      {
+        "row": 192,
+        "id": "d5-r192",
+        "time": "15:20-15:55",
+        "title": "离岛至花港码头",
+        "type": "交通",
+        "desc": "提前到岛上标示“花港观鱼方向”的离岛码头，凭原船票乘船到花港；候船15-20分钟＋航行约10-15分钟。购票时确认可异码头出湖，上岸后本次票程结束。",
+        "details": [
+          {
+            "title": "📌 出行提醒",
+            "points": [
+              "按上方 Excel 时间与路线执行。表中未列的门票、预约和营业时间待确认；不将规划时段视为已预订时段。"
+            ]
+          }
+        ],
+        "highlights": [],
+        "locations": [
+          {
+            "name": "西湖 花港观鱼游船码头",
+            "region": "杭州",
+            "note": "码头名称用于区域内搜索；具体入口、当日航段和上下船点须询现场工作人员。"
+          }
+        ],
+        "links": [
+          "http://xhslink.com/o/9McQy9kAfKo"
+        ]
+      },
+      {
+        "row": 195,
+        "id": "d5-r195",
+        "time": "15:55-16:35",
+        "title": "花港观鱼与苏堤南端",
+        "type": "景点",
+        "desc": "下船步行至花港观鱼红鱼池附近约25分钟，再走苏堤南端约15分钟拍照。不横穿整条苏堤，不绕完整西湖；从附近合规上车点叫车。",
+        "details": [
+          {
+            "title": "📌 出行提醒",
+            "points": [
+              "按上方 Excel 时间与路线执行。表中未列的门票、预约和营业时间待确认；不将规划时段视为已预订时段。"
+            ]
+          }
+        ],
+        "highlights": [],
+        "locations": [
+          {
+            "name": "花港观鱼",
+            "region": "杭州",
+            "note": "核对地图结果的地址后，再点“到这去／导航”。"
+          },
+          {
+            "name": "苏堤 南端",
+            "region": "杭州",
+            "note": "核对地图结果的地址后，再点“到这去／导航”。"
+          }
+        ],
+        "links": [
+          "http://xhslink.com/o/9haN92DBr3Q"
+        ]
+      },
+      {
+        "row": 197,
+        "id": "d5-r197",
+        "time": "16:35-17:30",
+        "title": "柳浪闻莺／回酒店",
+        "type": "景点",
+        "desc": "含候车20-30分钟前往柳浪闻莺，湖边散步拍照约20分钟；约17:30结束，回酒店入住休息。若堵车则省去该段回湖滨。【停航／到湖滨晚于14:30】改二公园→钱王祠外围→柳浪闻莺，步行、休息约1.5-2小时；如仍有船，先询末班再决定上岛，不抢末班。",
+        "details": [
+          {
+            "title": "📌 实用信息与注意事项",
+            "points": [
+              "11月上岛售票／末班须当日码头确认，规划15:20离岛。观光车仅体力不足时现场购票使用，线路与班次待确认。"
+            ]
+          }
+        ],
+        "highlights": [],
+        "locations": [
+          {
+            "name": "柳浪闻莺",
+            "region": "杭州",
+            "note": "核对地图结果的地址后，再点“到这去／导航”。"
+          },
+          {
+            "name": "钱王祠",
+            "region": "杭州",
+            "note": "核对地图结果的地址后，再点“到这去／导航”。"
+          },
+          {
+            "name": "杭州西湖东坡酒店",
+            "region": "杭州",
+            "note": "酒店名称沿用 Excel；请与订单的地址、电话核对，勿直接选择同名分店。"
+          }
+        ],
+        "links": []
+      },
+      {
+        "row": 202,
+        "id": "d5-r202",
+        "time": "18:30-20:30",
+        "title": "湖滨商圈夜景",
+        "type": "景点",
+        "desc": "18:30杭州酒家（延安路总店）晚餐，之后湖滨银泰IN77及近酒店湖岸轻松散步；不再把南山路全段灯饰视为固定节目。",
+        "details": [
+          {
+            "title": "🗺️ 游览路线、交通与拍照",
+            "points": [
+              "晚餐后湖滨散步约30-45分钟即可；次日早起，20:30左右返酒店。",
+              "花港／柳浪至酒店、酒店至餐厅按实际位置步行或叫车，预留15-30分钟。回【杭州西湖东坡酒店】。"
+            ]
+          },
+          {
+            "title": "🥢 餐饮与补充安排",
+            "points": [
+              "晚餐：杭州酒家（延安路总店）",
+              "（地道杭帮菜，必点：龙井虾仁、清香过桥排骨、闷骚南瓜）"
+            ]
+          },
+          {
+            "title": "📌 实用信息与注意事项",
+            "points": [
+              "音乐喷泉仅在官方确认开放与场次后顺路观看；未确认不等候。17:30-18:30留给交通、入住及休息。"
+            ]
+          }
+        ],
+        "highlights": [],
+        "locations": [
+          {
+            "name": "杭州酒家 延安路总店",
+            "region": "杭州",
+            "note": "核对地图结果的地址后，再点“到这去／导航”。"
+          },
+          {
+            "name": "湖滨银泰in77",
+            "region": "杭州",
+            "note": "核对地图结果的地址后，再点“到这去／导航”。"
+          },
+          {
+            "name": "杭州西湖东坡酒店",
+            "region": "杭州",
+            "note": "酒店名称沿用 Excel；请与订单的地址、电话核对，勿直接选择同名分店。"
+          }
+        ],
+        "links": []
+      }
+    ],
+    "date": "11/04",
+    "fullDate": "2026年11月04日 周三",
+    "title": "11月4日 周三 ｜ Day 5 ｜ 苏州 ➔ 杭州",
+    "route": "苏州 → 杭州 → 二公园码头 → 小瀛洲 → 花港 → 苏堤南端 → 柳浪闻莺／湖滨",
+    "hotel": "杭州西湖东坡酒店",
+    "alert": ""
+  },
+  {
+    "items": [
+      {
+        "row": 212,
+        "id": "d6-r212",
+        "time": "07:15-11:00",
+        "title": "灵隐寺与飞来峰",
+        "type": "景点",
+        "desc": "07:15-07:45退房、装行李；07:45同一辆跨城包车送灵隐区域，含拥堵／下客步行约45-60分钟；08:45-11:00飞来峰石刻与灵隐寺（含入园核验），不登韬光高处。",
+        "details": [
+          {
+            "title": "🗺️ 游览路线、交通与拍照",
+            "points": [
+              "必须先确认包车含上午随行、等候及行李保管，不能一边写滴滴一边假定行李随包车。若仅订城际接送，07:15退房后酒店寄存，13:30左右回酒店取行李，乌镇抵达另加45-60分钟。"
+            ]
+          },
+          {
+            "title": "🥢 餐饮与补充安排",
+            "points": [
+              "早餐：简单吃"
+            ]
+          },
+          {
+            "title": "📌 实用信息与注意事项",
+            "points": [
+              "灵隐飞来峰含灵隐寺已实行免费实名预约，2026/2起取消现场登记。须提前约11/5上午，护照预约与窗口待确认；酒店含早，询问提前打包。"
+            ]
+          }
+        ],
+        "highlights": [
+          {
+            "type": "预约",
+            "text": "规则及可选时段见攻略"
+          }
+        ],
+        "locations": [
+          {
+            "name": "灵隐飞来峰景区",
+            "region": "杭州",
+            "note": "核对地图结果的地址后，再点“到这去／导航”。"
+          },
+          {
+            "name": "灵隐寺",
+            "region": "杭州",
+            "note": "核对地图结果的地址后，再点“到这去／导航”。"
+          }
+        ],
+        "links": []
+      },
+      {
+        "row": 221,
+        "id": "d6-r221",
+        "time": "11:00-13:30",
+        "title": "小河直街步行街",
+        "type": "景点",
+        "desc": "11:00-12:00从灵隐到小河直街（含等车／步行及城区交通）；12:00-13:00午餐【溪湖院子里老店】（分店／营业待确认），13:00-13:30街区短逛。小河直街只作午餐＋短逛，不延至15:00；13:30-14:00洗手间、集合装车。若上午延误，缩短短逛，保留吃饭时间。",
+        "details": [
+          {
+            "title": "📌 出行提醒",
+            "points": [
+              "按上方 Excel 时间与路线执行。表中未列的门票、预约和营业时间待确认；不将规划时段视为已预订时段。"
+            ]
+          }
+        ],
+        "highlights": [],
+        "locations": [
+          {
+            "name": "小河直街",
+            "region": "杭州",
+            "note": "核对地图结果的地址后，再点“到这去／导航”。"
+          },
+          {
+            "name": "溪湖院子里老店",
+            "region": "杭州",
+            "note": "分店／地址待确认。此链接为城市内搜索，请先确认门店再导航。"
+          }
+        ],
+        "links": []
+      },
+      {
+        "row": 226,
+        "id": "d6-r226",
+        "time": "14:00-17:30",
+        "title": "跨城转移与入住乌镇",
+        "type": "交通",
+        "desc": "【重大待确认】11/5仍为乌镇峰会期间，西栅／乌村酒店民宿公告为会议用房，暂停游客预订。原【乌镇民宿】保留，须向酒店及平台确认已有订单能否履约、入园办法和车辆接驳。未确认前不能按本段直接出发。",
+        "details": [
+          {
+            "title": "🗺️ 游览路线、交通与拍照",
+            "points": [
+              "【确认接待后】14:00从小河直街（不是龙井村）出发，纯车程规划1.5-2小时＋路况缓冲30分钟，约16:00-16:30到游客中心；办理入住、行李托运／接驳、步行再留45-60分钟，约17:00-17:30进入游览。管制时另计。"
+            ]
+          },
+          {
+            "title": "📌 实用信息与注意事项",
+            "points": [
+              "峰会11/2-11/5；正常门票渠道暂停，按“乌镇峰会预约”通知核验。既有订单状态、11/6恢复安排均待确认；不擅自改酒店／日期。"
+            ]
+          },
+          {
+            "title": "🛎️ 乌镇住宿与接待",
+            "points": [
+              "原乌镇民宿名称和地址未细化，不能生成确定酒店导航。核对原订单后向酒店索取入住与行李接驳位置；以接待确认结果为准。"
+            ]
+          }
+        ],
+        "highlights": [
+          {
+            "type": "提醒",
+            "text": "条件安排／待确认"
+          }
+        ],
+        "locations": [
+          {
+            "name": "乌镇 西栅游客服务中心",
+            "region": "桐乡",
+            "note": "核对地图结果的地址后，再点“到这去／导航”。"
+          }
+        ],
+        "links": []
+      },
+      {
+        "row": 236,
+        "id": "d6-r236",
+        "time": "17:30-18:30（条件）",
+        "title": "摇橹船／临河慢游",
+        "type": "景点",
+        "desc": "仅在确认西栅接待、游船运行后安排：就近正规码头购包船票，询安渡坊／如意桥可用航段。含候船约45-60分钟，船行约20-30分钟。此时以夜景为主，不保证日落；晚到先晚餐，游船可顺延次日上午。",
+        "details": [
+          {
+            "title": "📌 实用信息与注意事项",
+            "points": [
+              "5人包船意向保留；原“官方限6人”无依据，改为载客数、包船价、上下船码头和末班均以官方现场确认为准。"
+            ]
+          },
+          {
+            "title": "🛎️ 乌镇住宿与接待",
+            "points": [
+              "原乌镇民宿名称和地址未细化，不能生成确定酒店导航。核对原订单后向酒店索取入住与行李接驳位置；以接待确认结果为准。"
+            ]
+          }
+        ],
+        "highlights": [
+          {
+            "type": "提醒",
+            "text": "条件安排／待确认"
+          }
+        ],
+        "locations": [
+          {
+            "name": "乌镇 西栅安渡坊码头",
+            "region": "桐乡",
+            "note": "码头名称用于区域内搜索；具体入口、当日航段和上下船点须询现场工作人员。"
+          },
+          {
+            "name": "乌镇 西栅如意桥码头",
+            "region": "桐乡",
+            "note": "码头名称用于区域内搜索；具体入口、当日航段和上下船点须询现场工作人员。"
+          }
+        ],
+        "links": []
+      },
+      {
+        "row": 241,
+        "id": "d6-r241",
+        "time": "18:30-21:00（条件）",
+        "title": "西栅晚餐与夜游",
+        "type": "景点",
+        "desc": "已办好入住再游览。18:30-19:30临水餐厅晚餐；19:30-20:30西栅大街、桥里桥周边夜景，视民宿位置顺路走；约21:00休息。邮局如已打烊，改次日，不排闭馆场馆。",
+        "details": [
+          {
+            "title": "🥢 餐饮与补充安排",
+            "points": [
+              "晚餐：西栅临水水上餐厅（乌镇特色砂锅、农家土鸡煲）"
+            ]
+          },
+          {
+            "title": "📌 实用信息与注意事项",
+            "points": [
+              "日间场馆统一留11/6。若17:30后才入内，先吃饭，夜游压缩至45-60分钟。不可把峰会结束当天理解为已恢复正常接待。"
+            ]
+          },
+          {
+            "title": "🛎️ 乌镇住宿与接待",
+            "points": [
+              "原乌镇民宿名称和地址未细化，不能生成确定酒店导航。核对原订单后向酒店索取入住与行李接驳位置；以接待确认结果为准。"
+            ]
+          }
+        ],
+        "highlights": [
+          {
+            "type": "提醒",
+            "text": "条件安排／待确认"
+          }
+        ],
+        "locations": [
+          {
+            "name": "乌镇 西栅大街",
+            "region": "桐乡",
+            "note": "核对地图结果的地址后，再点“到这去／导航”。"
+          },
+          {
+            "name": "乌镇 桥里桥",
+            "region": "桐乡",
+            "note": "核对地图结果的地址后，再点“到这去／导航”。"
+          }
+        ],
+        "links": []
+      }
+    ],
+    "date": "11/05",
+    "fullDate": "2026年11月05日 周四",
+    "title": "11月5日 周四 ｜ Day 6 ｜ 杭州 ➔ 乌镇（入住乌镇民宿）",
+    "route": "灵隐／飞来峰 → 小河直街 → 乌镇（接待及订单待确认）",
+    "hotel": "乌镇民宿（原订单接待及具体位置待确认）",
+    "alert": "重大待确认：11/5乌镇峰会接待、原民宿订单与入园办法未落实前，不能按计划直接出发。"
+  },
+  {
+    "items": [
+      {
+        "row": 247,
+        "id": "d7-r247",
+        "time": "08:00-11:30（条件）",
+        "title": "西栅晨景与深度游览",
+        "type": "景点",
+        "desc": "以11/6官方恢复接待为前提。08:00-09:00民宿早餐及附近晨景；09:00-11:00草木本色染坊（30分钟）、叙昌酱园（20分钟）、昭明书院（30分钟），其余为步行拍照；11:00-11:30回民宿退房。按民宿位置调整先后。",
+        "details": [
+          {
+            "title": "🥢 餐饮与补充安排",
+            "points": [
+              "早餐：景区民宿丰盛水乡早餐"
+            ]
+          },
+          {
+            "title": "📌 实用信息与注意事项",
+            "points": [
+              "晨雾不保证。场馆营业时间待确认；若补昨晚游船，使用13:30后的自由时段，不重复整套景点。"
+            ]
+          },
+          {
+            "title": "🛎️ 乌镇住宿与接待",
+            "points": [
+              "原乌镇民宿名称和地址未细化，不能生成确定酒店导航。核对原订单后向酒店索取入住与行李接驳位置；以接待确认结果为准。"
+            ]
+          }
+        ],
+        "highlights": [
+          {
+            "type": "提醒",
+            "text": "条件安排／待确认"
+          }
+        ],
+        "locations": [
+          {
+            "name": "乌镇 草木本色染坊",
+            "region": "桐乡",
+            "note": "核对地图结果的地址后，再点“到这去／导航”。"
+          },
+          {
+            "name": "乌镇 叙昌酱园",
+            "region": "桐乡",
+            "note": "核对地图结果的地址后，再点“到这去／导航”。"
+          },
+          {
+            "name": "乌镇 昭明书院",
+            "region": "桐乡",
+            "note": "核对地图结果的地址后，再点“到这去／导航”。"
+          }
+        ],
+        "links": []
+      },
+      {
+        "row": 251,
+        "id": "d7-r251",
+        "time": "11:30-13:00",
+        "title": "西栅特色午餐",
+        "type": "餐饮",
+        "desc": "11:30前退房并寄存行李，12:00-13:00景区午餐。询问行李托运至游客中心的领取位置与到件时间，勿午餐后才开始退房。",
+        "details": [
+          {
+            "title": "🥢 餐饮与补充安排",
+            "points": [
+              "午餐：西栅景区内官方家常菜馆（太湖白水鱼、乌镇酱鸭）"
+            ]
+          },
+          {
+            "title": "📌 实用信息与注意事项",
+            "points": [
+              "原“午餐后退房”改为午餐前办理；具体退房时限／寄存服务以原民宿订单确认为准。"
+            ]
+          },
+          {
+            "title": "🛎️ 乌镇住宿与接待",
+            "points": [
+              "原乌镇民宿名称和地址未细化，不能生成确定酒店导航。核对原订单后向酒店索取入住与行李接驳位置；以接待确认结果为准。"
+            ]
+          }
+        ],
+        "highlights": [],
+        "locations": [
+          {
+            "name": "乌镇 西栅游客服务中心",
+            "region": "桐乡",
+            "note": "核对地图结果的地址后，再点“到这去／导航”。"
+          }
+        ],
+        "links": []
+      },
+      {
+        "row": 255,
+        "id": "d7-r255",
+        "time": "13:00-15:00（条件）",
+        "title": "木心美术馆／茶歇",
+        "type": "景点",
+        "desc": "13:00-14:15木心美术馆，14:15-15:00临河茶歇或补游船，二选一；不重复上午染坊／书院。若美术馆闭馆则保留茶歇慢游。15:00-15:45出景区、取5件行李及上车。",
+        "details": [
+          {
+            "title": "🥢 餐饮与补充安排",
+            "points": [
+              "下午茶：定胜糕、萝卜丝饼 / 沿河咖啡"
+            ]
+          },
+          {
+            "title": "📌 实用信息与注意事项",
+            "points": [
+              "木心美术馆周一常规闭馆，11/6为周五，但2026有施工闭馆公告，届时是否开放待确认；独立门票与停止入场时间待确认。"
+            ]
+          },
+          {
+            "title": "🛎️ 乌镇住宿与接待",
+            "points": [
+              "原乌镇民宿名称和地址未细化，不能生成确定酒店导航。核对原订单后向酒店索取入住与行李接驳位置；以接待确认结果为准。"
+            ]
+          }
+        ],
+        "highlights": [
+          {
+            "type": "提醒",
+            "text": "条件安排／待确认"
+          }
+        ],
+        "locations": [
+          {
+            "name": "乌镇 木心美术馆",
+            "region": "桐乡",
+            "note": "核对地图结果的地址后，再点“到这去／导航”。"
+          },
+          {
+            "name": "乌镇 西栅游客服务中心",
+            "region": "桐乡",
+            "note": "核对地图结果的地址后，再点“到这去／导航”。"
+          }
+        ],
+        "links": []
+      },
+      {
+        "row": 260,
+        "id": "d7-r260",
+        "time": "16:00-19:30",
+        "title": "跨城转移：乌镇 ➔ 上海",
+        "type": "交通",
+        "desc": "16:00按原包车计划出发；乌镇至上海市区按2.5-3小时＋入住约30分钟安排，目标19:00-19:30安顿。若早到再购物，不靠1.5小时车程安排晚餐。",
+        "details": [
+          {
+            "title": "🗺️ 游览路线、交通与拍照",
+            "points": [
+              "【跨城包车保留】9座商务车直达【汉庭酒店（上海南京东路步行街店）】。11/6周五晚高峰，且11/5-10进博会期间，抵达可能晚于19:30，晚餐相应顺延。"
+            ]
+          },
+          {
+            "title": "📌 实用信息与注意事项",
+            "points": [
+              "【物流（硬性）】 抵达上海后直接前往【汉庭酒店（上海南京东路步行街店）】办理入住，存放5件大行李。"
+            ]
+          }
+        ],
+        "highlights": [],
+        "locations": [
+          {
+            "name": "汉庭酒店（上海南京东路步行街店）",
+            "region": "上海",
+            "note": "酒店名称沿用 Excel；请与订单的地址、电话核对，勿直接选择同名分店。"
+          }
+        ],
+        "links": []
+      },
+      {
+        "row": 268,
+        "id": "d7-r268",
+        "time": "入住后（可选）",
+        "title": "上海市第一食品",
+        "type": "景点",
+        "desc": "上海市第一食品买蝴蝶酥：入住后若仍营业且不累可顺路购买；否则移至Day 8南京路时段，不为购物赶车。",
+        "details": [
+          {
+            "title": "📌 出行提醒",
+            "points": [
+              "按上方 Excel 时间与路线执行。表中未列的门票、预约和营业时间待确认；不将规划时段视为已预订时段。"
+            ]
+          }
+        ],
+        "highlights": [
+          {
+            "type": "提醒",
+            "text": "按体力选择"
+          }
+        ],
+        "locations": [
+          {
+            "name": "上海市第一食品商店 南京东路",
+            "region": "上海",
+            "note": "核对地图结果的地址后，再点“到这去／导航”。"
+          }
+        ],
+        "links": []
+      },
+      {
+        "row": 270,
+        "id": "d7-r270",
+        "time": "19:30-21:00",
+        "title": "上海晚宴与入睡",
+        "type": "餐饮",
+        "desc": "入住后在酒店／南京东路附近吃本帮菜，不再特地跨区去新天地或进贤路。原圆苑酒家／德兴馆保留为就近分店备选，地址和营业时间待确认。",
+        "details": [
+          {
+            "title": "🥢 餐饮与补充安排",
+            "points": [
+              "晚餐：圆苑酒家 / 德兴馆（红烧肉、神仙鸡）"
+            ]
+          },
+          {
+            "title": "📌 实用信息与注意事项",
+            "points": [
+              "【物流】 晚上在【汉庭酒店】安稳休息，准备次日石库门深度游。"
+            ]
+          }
+        ],
+        "highlights": [],
+        "locations": [
+          {
+            "name": "圆苑酒家",
+            "region": "上海",
+            "note": "分店／地址待确认。此链接为城市内搜索，请先确认门店再导航。"
+          },
+          {
+            "name": "德兴馆",
+            "region": "上海",
+            "note": "分店／地址待确认。此链接为城市内搜索，请先确认门店再导航。"
+          },
+          {
+            "name": "汉庭酒店（上海南京东路步行街店）",
+            "region": "上海",
+            "note": "酒店名称沿用 Excel；请与订单的地址、电话核对，勿直接选择同名分店。"
+          }
+        ],
+        "links": []
+      }
+    ],
+    "date": "11/06",
+    "fullDate": "2026年11月06日 周五",
+    "title": "11月6日 周五 ｜ Day 7 ｜ 乌镇 ➔ 上海（入住上海酒店）",
+    "route": "西栅晨游 → 午餐／木心美术馆（条件）→ 上海",
+    "hotel": "汉庭酒店（上海南京东路步行街店）",
+    "alert": "乌镇晨游以11/6官方恢复接待为前提；木心美术馆是否恢复开放待确认。"
+  },
+  {
+    "items": [
+      {
+        "row": 274,
+        "id": "d8-r274",
+        "time": "08:30-09:00",
+        "title": "酒店退房",
+        "type": "交通",
+        "desc": "【汉庭酒店】退房，行李寄存前台，确认可寄存至21:00且取件有人值守；整理好护照、航班信息和随身必需品。",
+        "details": [
+          {
+            "title": "📌 出行提醒",
+            "points": [
+              "按上方 Excel 时间与路线执行。表中未列的门票、预约和营业时间待确认；不将规划时段视为已预订时段。"
+            ]
+          }
+        ],
+        "highlights": [],
+        "locations": [
+          {
+            "name": "汉庭酒店（上海南京东路步行街店）",
+            "region": "上海",
+            "note": "酒店名称沿用 Excel；请与订单的地址、电话核对，勿直接选择同名分店。"
+          }
+        ],
+        "links": []
+      },
+      {
+        "row": 276,
+        "id": "d8-r276",
+        "time": "09:00-10:30",
+        "title": "南京路步行街",
+        "type": "景点",
+        "desc": "南京路早餐、补买伴手礼；10:00-10:30向人民广场博物馆南门移动，步行／打车预留20-30分钟。博物馆购票确认前暂保留该参观时段。",
+        "details": [
+          {
+            "title": "📌 出行提醒",
+            "points": [
+              "按上方 Excel 时间与路线执行。表中未列的门票、预约和营业时间待确认；不将规划时段视为已预订时段。"
+            ]
+          }
+        ],
+        "highlights": [],
+        "locations": [
+          {
+            "name": "南京东路步行街",
+            "region": "上海",
+            "note": "核对地图结果的地址后，再点“到这去／导航”。"
+          },
+          {
+            "name": "上海博物馆 人民广场馆 南门",
+            "region": "上海",
+            "note": "核对地图结果的地址后，再点“到这去／导航”。"
+          }
+        ],
+        "links": []
+      },
+      {
+        "row": 278,
+        "id": "d8-r278",
+        "time": "10:30-13:00（待定）",
+        "title": "上海博物馆（保留）",
+        "type": "景点",
+        "desc": "按人民广场馆安排2.5小时（含安检）。官方公告2026/7/9-2027/11/14仅展“世界树之巅：美洲古代文明大展”，须购票，非原想象的常设展；是否接受此展待你决定。未擅自改到浦东东馆。",
+        "details": [
+          {
+            "title": "🥢 餐饮与补充安排",
+            "points": [
+              "13:00-14:00人民广场／南京西路午餐并转往星巴克；不再遗漏午餐。"
+            ]
+          },
+          {
+            "title": "📌 实用信息与注意事项",
+            "points": [
+              "日场9:00-17:00，15:00停入，周一闭；11/7周六常规开放。官方小程序／境外trip.com购票。原11/1中午抢票说明删除。"
+            ]
+          }
+        ],
+        "highlights": [
+          {
+            "type": "提醒",
+            "text": "条件安排／待确认"
+          }
+        ],
+        "locations": [
+          {
+            "name": "上海博物馆 人民广场馆",
+            "region": "上海",
+            "note": "核对地图结果的地址后，再点“到这去／导航”。"
+          }
+        ],
+        "links": []
+      },
+      {
+        "row": 284,
+        "id": "d8-r284",
+        "time": "14:00-14:45",
+        "title": "星巴克臻选上海烘焙工坊",
+        "type": "景点",
+        "desc": "午餐后前往南京西路星巴克臻选上海烘焙工坊，约45分钟参观与咖啡；等候久则缩短消费，不把逛咖啡店排成完整午餐。",
+        "details": [
+          {
+            "title": "📌 出行提醒",
+            "points": [
+              "按上方 Excel 时间与路线执行。表中未列的门票、预约和营业时间待确认；不将规划时段视为已预订时段。"
+            ]
+          }
+        ],
+        "highlights": [],
+        "locations": [
+          {
+            "name": "星巴克臻选上海烘焙工坊 南京西路",
+            "region": "上海",
+            "note": "核对地图结果的地址后，再点“到这去／导航”。"
+          }
+        ],
+        "links": []
+      },
+      {
+        "row": 287,
+        "id": "d8-r287",
+        "time": "15:00-16:15",
+        "title": "张园",
+        "type": "景点",
+        "desc": "星巴克至张园步行约10-15分钟，张园街区外观与石库门慢逛75分钟。品牌内部活动／预约以当天为准。",
+        "details": [
+          {
+            "title": "🗺️ 游览路线、交通与拍照",
+            "points": [
+              "【玩点】 这里经过全新高规格修复，大批国际顶奢品牌在老弄堂内开设体验馆。一定要在石库门老砖墙下喝一杯弄堂咖啡，极度出片。步行穿过南京西路周边街区前往张园，按实际开放入口导航；并非出门即进园。"
+            ]
+          },
+          {
+            "title": "🥢 餐饮与补充安排",
+            "points": [
+              "星巴克已喝咖啡，蓝瓶咖啡保留为二选一，不连续强制消费。"
+            ]
+          },
+          {
+            "title": "📌 实用信息与注意事项",
+            "points": [
+              "极具历史穿越感，是目前上海时尚界的顶流打卡地。"
+            ]
+          }
+        ],
+        "highlights": [
+          {
+            "type": "预约",
+            "text": "规则及可选时段见攻略"
+          }
+        ],
+        "locations": [
+          {
+            "name": "张园",
+            "region": "上海",
+            "note": "核对地图结果的地址后，再点“到这去／导航”。"
+          }
+        ],
+        "links": []
+      },
+      {
+        "row": 294,
+        "id": "d8-r294",
+        "time": "16:45-17:45（备选）",
+        "title": "思南公馆 （备选）",
+        "type": "景点",
+        "desc": "保留思南公馆备选；16:15-16:45交通，16:45-17:45看花园洋房外观。若疲劳或前面延误，直接回南京路吃饭休息。",
+        "details": [
+          {
+            "title": "🗺️ 游览路线、交通与拍照",
+            "points": [
+              "以思南公馆街区散步拍照为主；周恩来故居等内部场馆可能已停入，不承诺傍晚入馆，也不把梅兰芳故居列作该区顺路项目。张园至思南公馆含候车预留30分钟；约17:45离开，回南京东路预留30-45分钟。"
+            ]
+          },
+          {
+            "title": "🥢 餐饮与补充安排",
+            "points": [
+              "傍晚：在思南文学之家或洋房外闲坐"
+            ]
+          },
+          {
+            "title": "📌 实用信息与注意事项",
+            "points": [
+              "树影婆娑，极具上世纪老上海“旧钱风”的优雅与静谧。"
+            ]
+          }
+        ],
+        "highlights": [
+          {
+            "type": "提醒",
+            "text": "按体力选择"
+          }
+        ],
+        "locations": [
+          {
+            "name": "思南公馆",
+            "region": "上海",
+            "note": "核对地图结果的地址后，再点“到这去／导航”。"
+          }
+        ],
+        "links": []
+      },
+      {
+        "row": 301,
+        "id": "d8-r301",
+        "time": "18:30-20:00",
+        "title": "南京路步行街",
+        "type": "景点",
+        "desc": "南京东路附近晚餐＋最后采购；疲劳可在室内坐下休息，不再安排远距离步行。20:00后回酒店附近等待送机。从思南公馆直接回南京东路酒店／餐厅，不再误写前往进贤路；若取消备选，则张园直接回南京路。",
+        "details": [
+          {
+            "title": "📌 出行提醒",
+            "points": [
+              "按上方 Excel 时间与路线执行。表中未列的门票、预约和营业时间待确认；不将规划时段视为已预订时段。"
+            ]
+          }
+        ],
+        "highlights": [],
+        "locations": [
+          {
+            "name": "南京东路步行街",
+            "region": "上海",
+            "note": "核对地图结果的地址后，再点“到这去／导航”。"
+          }
+        ],
+        "links": []
+      },
+      {
+        "row": 305,
+        "id": "d8-r305",
+        "time": "20:00-21:00",
+        "title": "物流闭环：回程取行李",
+        "type": "交通",
+        "desc": "回【汉庭酒店（上海南京东路店）】取齐5件行李，核对护照／航班航站楼，洗手间及装车。建议21:00送机出发；原预订22:00出发保留在备注，须联系司机确认提前，未视为已改订单。",
+        "details": [
+          {
+            "title": "📌 实用信息与注意事项",
+            "points": [
+              "【需确认包车】建议21:00出发、22:30-23:00到机场。原22:00-23:30送机时段未擅改预订；如司机不能提前，须告知另评估。"
+            ]
+          }
+        ],
+        "highlights": [],
+        "locations": [
+          {
+            "name": "汉庭酒店（上海南京东路步行街店）",
+            "region": "上海",
+            "note": "酒店名称沿用 Excel；请与订单的地址、电话核对，勿直接选择同名分店。"
+          }
+        ],
+        "links": []
+      },
+      {
+        "row": 311,
+        "id": "d8-r311",
+        "time": "21:00-23:00（建议）",
+        "title": "终点送机",
+        "type": "交通",
+        "desc": "建议预订9座商务送机提前至21:00发车，车程按60-90分钟并留额外缓冲，目标22:30、最迟规划23:00到浦东T2。原T2保留但须按实际航班核对；不以免税购物挤压手续。",
+        "details": [
+          {
+            "title": "📌 出行提醒",
+            "points": [
+              "按上方 Excel 时间与路线执行。表中未列的门票、预约和营业时间待确认；不将规划时段视为已预订时段。"
+            ]
+          }
+        ],
+        "highlights": [
+          {
+            "type": "提醒",
+            "text": "条件安排／待确认"
+          }
+        ],
+        "locations": [
+          {
+            "name": "浦东国际机场 T2航站楼",
+            "region": "上海",
+            "note": "T2沿用 Excel，出发前必须按实际航班确认航站楼。"
+          }
+        ],
+        "links": []
+      }
+    ],
+    "date": "11/07",
+    "fullDate": "2026年11月07日 周六",
+    "title": "11月7日 周六 ｜ Day 8 ｜ 上海顶级石库门深度游",
+    "route": "退房 → 南京路 → 上博（待定）→ 烘焙工坊 → 张园 → 思南（备选）→ 机场",
+    "hotel": "已退房；行李寄存至21:00需确认",
+    "alert": "上海博物馆人民广场馆为指定收费特展，是否接受待决定。21:00送机为建议，原22:00订单尚待司机确认提前。"
+  },
+  {
+    "items": [
+      {
+        "row": 316,
+        "id": "d9-r316",
+        "time": "02:15",
+        "title": "飞机起飞",
+        "type": "交通",
+        "desc": "11月8日（周日）02:15起飞时间保留：必须11月7日晚赴机场。目标提前3小时以上抵达，办理值机／托运、出境和安检，依登机牌时间到登机口。航司柜台关闭时间、航班号与T2待确认。",
+        "details": [
+          {
+            "title": "🥢 餐饮与补充安排",
+            "points": [
+              "结束旅程"
+            ]
+          },
+          {
+            "title": "📌 实用信息与注意事项",
+            "points": [
+              "当天已退房，无客房午休；实际为长日活动接红眼航班，不能保证体能充沛。原其他Tab的预约清单有过期资料，依首张行程修订说明执行。"
+            ]
+          }
+        ],
+        "highlights": [
+          {
+            "type": "预约",
+            "text": "规则及可选时段见攻略"
+          }
+        ],
+        "locations": [
+          {
+            "name": "浦东国际机场 T2航站楼",
+            "region": "上海",
+            "note": "T2沿用 Excel，出发前必须按实际航班确认航站楼。"
+          }
+        ],
+        "links": []
+      }
+    ],
+    "date": "11/08",
+    "fullDate": "2026年11月08日 周日",
+    "title": "11月8日 周日 ｜ Day 9 ｜ 顺利离境",
+    "route": "浦东机场 → 02:15起飞",
+    "hotel": "无住宿；凌晨航班",
+    "alert": ""
+  }
+]
+      };
     }
   </script>
 </body>
 </html>
+
